@@ -76,7 +76,7 @@ class EspService {
   // 发送消息
   void sendMessage({
     required int messageType,
-    required String messageId,
+    required Uint8List messageId,
     required String pubkey,
     required Uint8List data,
   }) {
@@ -86,8 +86,8 @@ class EspService {
 
     final output = Uint8List.fromList([
       ..._intTo2Bytes(messageType),
-      ...messageId.padRight(idSize).codeUnits,
-      ...pubkey.padRight(pubkeySize).codeUnits,
+      ...messageId,
+      ...hexToBytes(pubkey),
       ...header,
       ...encrypted,
       ..._intTo2Bytes(crc),
@@ -138,8 +138,8 @@ class EspService {
     try {
       final message = ReceivedMessage(
         type: _bytesToInt(data.sublist(0, 2)),
-        id: String.fromCharCodes(data.sublist(2, 18)).trim(),
-        pubkey: String.fromCharCodes(data.sublist(18, 50)).trim(),
+        id: data.sublist(2, 18),
+        pubkey: bytesToHex(data.sublist(18, 50)),
         dataLength:
             ByteData.sublistView(data.sublist(50, 54)).getUint32(0, Endian.big),
         encryptedData: data.sublist(54, data.length - 2),
@@ -163,18 +163,18 @@ class EspService {
   }
 
   // AES加密
-  Uint8List _aesEncrypt(Uint8List input, String messageId) {
+  Uint8List _aesEncrypt(Uint8List input, Uint8List messageId) {
     final key = encrypt.Key.fromUtf8(aesKey);
-    final iv = encrypt.IV.fromUtf8(messageId.padRight(16));
+    final iv = encrypt.IV(messageId);
     final encrypter =
         encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.ctr));
     return encrypter.encryptBytes(input, iv: iv).bytes;
   }
 
   // AES解密
-  Uint8List _aesDecrypt(Uint8List input, String messageId) {
+  Uint8List _aesDecrypt(Uint8List input, Uint8List messageId) {
     final key = encrypt.Key.fromUtf8(aesKey);
-    final iv = encrypt.IV.fromUtf8(messageId.padRight(16));
+    final iv = encrypt.IV(messageId);
     final encrypter =
         encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.ctr));
     return Uint8List.fromList(
@@ -204,11 +204,33 @@ class EspService {
     data.setUint16(0, value, Endian.big);
     return data.buffer.asUint8List();
   }
+
+  // 将十六进制字符串转换为字节数据
+  Uint8List hexToBytes(String hex) {
+    if (hex.length % 2 != 0) {
+      throw ArgumentError('Hex string must have an even number of characters');
+    }
+
+    final Uint8List bytes = Uint8List(hex.length ~/ 2);
+    for (int i = 0; i < hex.length; i += 2) {
+      bytes[i ~/ 2] = int.parse(hex.substring(i, i + 2), radix: 16);
+    }
+    return bytes;
+  }
+
+// 将字节数据转换为十六进制字符串
+  String bytesToHex(Uint8List bytes) {
+    final buffer = StringBuffer();
+    for (final byte in bytes) {
+      buffer.write(byte.toRadixString(16).padLeft(2, '0'));
+    }
+    return buffer.toString();
+  }
 }
 
 class ReceivedMessage {
   final int type;
-  final String id;
+  final Uint8List id;
   final String pubkey;
   final int dataLength;
   final Uint8List encryptedData;
