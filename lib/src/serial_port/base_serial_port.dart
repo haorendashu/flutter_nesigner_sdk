@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'dart:typed_data';
+
 import 'serial_port.dart';
 import 'package:libserialport/libserialport.dart' as ls;
 
@@ -20,6 +24,11 @@ class BaseSerialPort extends SerialPort {
 
   @override
   bool close() {
+    if (_reader != null) {
+      try {
+        _reader!.close();
+      } catch (e) {}
+    }
     return sp.close();
   }
 
@@ -58,4 +67,19 @@ class BaseSerialPort extends SerialPort {
 
   @override
   String? get macAddress => sp.macAddress;
+
+  @override
+  StreamSubscription<Uint8List> listen(void Function(Uint8List event)? onData,
+      {Function? onError, void Function()? onDone, bool? cancelOnError}) {
+    _reader = ls.SerialPortReader(sp);
+    return _reader!.stream.listen(onData,
+        onError: onError, onDone: onDone, cancelOnError: cancelOnError);
+  }
+
+  ls.SerialPortReader? _reader;
+
+  @override
+  int write(Uint8List bytes) {
+    return sp.write(bytes);
+  }
 }

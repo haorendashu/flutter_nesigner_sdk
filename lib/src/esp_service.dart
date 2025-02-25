@@ -1,12 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:crc/crc.dart';
-import 'package:flutter_libserialport/flutter_libserialport.dart';
 import 'package:flutter_nesigner_sdk/src/serial_port/serial_port.dart';
 import 'package:libserialport/libserialport.dart' as ls;
 import 'package:encrypt/encrypt.dart' as encrypt;
+
+import 'utils/crc_util.dart';
 
 /// EspService .
 ///
@@ -23,7 +25,7 @@ class EspService {
 
   bool _isReading = false;
 
-  ls.SerialPort serialPort;
+  SerialPort serialPort;
 
   Uint8List _receiveBuffer = Uint8List(0); // 接收缓冲区
 
@@ -41,8 +43,6 @@ class EspService {
 
   void start() {
     _openAndCheck();
-
-    startListening((msg) {});
   }
 
   void stop() {
@@ -69,8 +69,18 @@ class EspService {
 
   void _doOpen() {
     if (!serialPort.isOpen) {
-      serialPort.open(mode: ls.SerialPortMode.readWrite);
+      serialPort.open();
     }
+  }
+
+  Uint8List randomMessageId() {
+    var messageId = Uint8List(16);
+    var random = Random();
+    for (var i = 0; i < 16; i++) {
+      messageId[i] = random.nextInt(256);
+    }
+
+    return messageId;
   }
 
   // 发送消息
@@ -80,9 +90,11 @@ class EspService {
     required String pubkey,
     required Uint8List data,
   }) {
-    final encrypted = _aesEncrypt(data, messageId);
+    final encrypted = aesEncrypt(data, messageId);
     final header = _buildHeader(encrypted.length);
-    final crc = _calculateCrc(encrypted);
+    final crc = CRCUtil.crc16Calculate(encrypted);
+
+    print("send head ${encrypted.length + 2}");
 
     final output = Uint8List.fromList([
       ..._intTo2Bytes(messageType),
@@ -93,14 +105,16 @@ class EspService {
       ..._intTo2Bytes(crc),
     ]);
 
+    print("send fullLength ${output.length}");
+
     serialPort.write(output);
   }
 
   // 开始监听消息
   void startListening(Function(ReceivedMessage) callback) {
     _isReading = true;
-    SerialPortReader reader = SerialPortReader(serialPort);
-    reader.stream.listen((data) {
+    serialPort.listen((data) {
+      print(data);
       // 将新数据追加到缓冲区
       _receiveBuffer = Uint8List.fromList([..._receiveBuffer, ...data]);
       _processBuffer(callback);
@@ -117,6 +131,11 @@ class EspService {
       final headerBytes = _receiveBuffer.sublist(50, 54);
       final totalLen =
           ByteData.sublistView(headerBytes).getUint32(0, Endian.big);
+
+      print("receive head $totalLen");
+      print("receive fullLength ${_receiveBuffer.length}");
+      print("id ${_bytesToInt(_receiveBuffer.sublist(0, 2))}");
+      print("id ${bytesToHex(_receiveBuffer.sublist(18, 50))}");
 
       // 计算完整帧长度
       final fullFrameLength = 54 + totalLen;
@@ -163,7 +182,7 @@ class EspService {
   }
 
   // AES加密
-  Uint8List _aesEncrypt(Uint8List input, Uint8List messageId) {
+  Uint8List aesEncrypt(Uint8List input, Uint8List messageId) {
     final key = encrypt.Key.fromUtf8(aesKey);
     final iv = encrypt.IV(messageId);
     final encrypter =
@@ -172,7 +191,7 @@ class EspService {
   }
 
   // AES解密
-  Uint8List _aesDecrypt(Uint8List input, Uint8List messageId) {
+  Uint8List aesDecrypt(Uint8List input, Uint8List messageId) {
     final key = encrypt.Key.fromUtf8(aesKey);
     final iv = encrypt.IV(messageId);
     final encrypter =
@@ -186,11 +205,6 @@ class EspService {
     final header = ByteData(4);
     header.setUint32(0, dataLength + crcSize, Endian.big);
     return header.buffer.asUint8List();
-  }
-
-  // CRC16计算
-  int _calculateCrc(Uint8List data) {
-    return ccitt.calculate(data);
   }
 
   // 工具方法：将2字节转换为int
@@ -246,7 +260,7 @@ class ReceivedMessage {
   });
 
   bool get isValid {
-    final calculatedCrc = ccitt.calculate(encryptedData);
+    final calculatedCrc = CRCUtil.crc16Calculate(encryptedData);
     return calculatedCrc == receivedCrc;
   }
 
