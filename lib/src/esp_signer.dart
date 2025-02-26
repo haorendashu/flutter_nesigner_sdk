@@ -32,7 +32,7 @@ class EspSigner {
   }
 
   bool get isOpen {
-    return espService.serialPort.isOpen;
+    return espService.transport.isOpen;
   }
 
   Future<String?> getPublicKey() async {

@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_nesigner_sdk/src/esp_callback.dart';
 import 'package:flutter_nesigner_sdk/src/serial_port/serial_port.dart';
+import 'package:flutter_nesigner_sdk/src/transport/transport.dart';
 import 'package:libserialport/libserialport.dart' as ls;
 import 'package:encrypt/encrypt.dart' as encrypt;
 
@@ -25,11 +26,11 @@ class EspService {
 
   bool _isReading = false;
 
-  SerialPort serialPort;
+  Transport transport;
 
   Uint8List _receiveBuffer = Uint8List(0); // 接收缓冲区
 
-  EspService(this.serialPort);
+  EspService(this.transport);
 
   static List<String> get availablePorts {
     if (Platform.isIOS) {
@@ -50,8 +51,8 @@ class EspService {
       _timer!.cancel();
     }
 
-    if (serialPort.isOpen) {
-      serialPort.close();
+    if (transport.isOpen) {
+      transport.close();
     }
   }
 
@@ -68,8 +69,8 @@ class EspService {
   }
 
   void _doOpen() {
-    if (!serialPort.isOpen) {
-      serialPort.open();
+    if (!transport.isOpen) {
+      transport.open();
     }
   }
 
@@ -109,13 +110,13 @@ class EspService {
     print("send fullLength ${output.length}");
     print(output);
 
-    serialPort.write(output);
+    transport.write(output);
   }
 
   // 开始监听消息
   void startListening(Function(ReceivedMessage) callback) {
     _isReading = true;
-    serialPort.listen((data) {
+    transport.listen((data) {
       print(data);
       // 将新数据追加到缓冲区
       _receiveBuffer = Uint8List.fromList([..._receiveBuffer, ...data]);
@@ -180,7 +181,7 @@ class EspService {
   // 停止监听
   void stopListening() {
     _isReading = false;
-    serialPort.close();
+    transport.close();
   }
 
   // AES加密

@@ -4,19 +4,12 @@ import 'dart:typed_data';
 import 'package:flutter/scheduler.dart';
 import 'package:libserialport/libserialport.dart' as ls;
 
+import '../transport/transport.dart';
+
 /// SerialPort
 ///
 /// libserialport doesn't support IOS. So wrap it and hope that someone can make an IOS one.
-abstract class SerialPort {
-  /// Opens the serial port.
-  bool open();
-
-  /// Closes the serial port.
-  bool close();
-
-  /// Gets whether the serial port is open.
-  bool get isOpen;
-
+abstract class SerialPort extends Transport {
   /// Gets the name of the port.
   ///
   /// The name returned is whatever is normally used to refer to a port on the
@@ -56,11 +49,4 @@ abstract class SerialPort {
 
   /// Gets the MAC address of a Bluetooth serial adapter port.
   String? get macAddress;
-
-  StreamSubscription<Uint8List> listen(void onData(Uint8List event)?,
-      {Function? onError, void onDone()?, bool? cancelOnError});
-
-  /// Write data to the serial port.
-  /// Returns the amount of bytes written.
-  int write(Uint8List bytes);
 }
