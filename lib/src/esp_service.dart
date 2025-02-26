@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter_nesigner_sdk/src/esp_callback.dart';
 import 'package:flutter_nesigner_sdk/src/serial_port/serial_port.dart';
 import 'package:libserialport/libserialport.dart' as ls;
 import 'package:encrypt/encrypt.dart' as encrypt;
@@ -21,7 +22,6 @@ class EspService {
   static const int pubkeySize = 32;
   static const int headerSize = 4;
   static const int crcSize = 2;
-  static const String aesKey = "0123456789ABCDEF";
 
   bool _isReading = false;
 
@@ -85,27 +85,29 @@ class EspService {
 
   // 发送消息
   void sendMessage({
+    required String aesKey,
     required int messageType,
     required Uint8List messageId,
     required String pubkey,
     required Uint8List data,
   }) {
-    final encrypted = aesEncrypt(data, messageId);
+    final encrypted = aesEncrypt(aesKey, data, messageId);
     final header = _buildHeader(encrypted.length);
     final crc = CRCUtil.crc16Calculate(encrypted);
 
     print("send head ${encrypted.length + 2}");
 
     final output = Uint8List.fromList([
-      ..._intTo2Bytes(messageType),
+      ...intToTwoBytes(messageType),
       ...messageId,
       ...hexToBytes(pubkey),
       ...header,
       ...encrypted,
-      ..._intTo2Bytes(crc),
+      ...intToTwoBytes(crc),
     ]);
 
     print("send fullLength ${output.length}");
+    print(output);
 
     serialPort.write(output);
   }
@@ -134,7 +136,7 @@ class EspService {
 
       print("receive head $totalLen");
       print("receive fullLength ${_receiveBuffer.length}");
-      print("id ${_bytesToInt(_receiveBuffer.sublist(0, 2))}");
+      print("type ${twoBytesToInt(_receiveBuffer.sublist(0, 2))}");
       print("id ${bytesToHex(_receiveBuffer.sublist(18, 50))}");
 
       // 计算完整帧长度
@@ -156,13 +158,13 @@ class EspService {
   void _parseSingleFrame(Uint8List data, Function(ReceivedMessage) callback) {
     try {
       final message = ReceivedMessage(
-        type: _bytesToInt(data.sublist(0, 2)),
+        type: twoBytesToInt(data.sublist(0, 2)),
         id: data.sublist(2, 18),
         pubkey: bytesToHex(data.sublist(18, 50)),
         dataLength:
             ByteData.sublistView(data.sublist(50, 54)).getUint32(0, Endian.big),
         encryptedData: data.sublist(54, data.length - 2),
-        receivedCrc: _bytesToInt(data.sublist(data.length - 2)),
+        receivedCrc: twoBytesToInt(data.sublist(data.length - 2)),
       );
 
       if (message.isValid) {
@@ -182,7 +184,7 @@ class EspService {
   }
 
   // AES加密
-  Uint8List aesEncrypt(Uint8List input, Uint8List messageId) {
+  Uint8List aesEncrypt(String aesKey, Uint8List input, Uint8List messageId) {
     final key = encrypt.Key.fromUtf8(aesKey);
     final iv = encrypt.IV(messageId);
     final encrypter =
@@ -191,7 +193,7 @@ class EspService {
   }
 
   // AES解密
-  Uint8List aesDecrypt(Uint8List input, Uint8List messageId) {
+  Uint8List aesDecrypt(String aesKey, Uint8List input, Uint8List messageId) {
     final key = encrypt.Key.fromUtf8(aesKey);
     final iv = encrypt.IV(messageId);
     final encrypter =
@@ -207,16 +209,26 @@ class EspService {
     return header.buffer.asUint8List();
   }
 
-  // 工具方法：将2字节转换为int
-  int _bytesToInt(Uint8List bytes) {
-    return ByteData.sublistView(bytes).getUint16(0, Endian.big);
+  // 将 int 数字保存到 2 位字节里面
+  List<int> intToTwoBytes(int number) {
+    // 确保数字在 16 位无符号整数的范围内（0 到 65535）
+    if (number < 0 || number > 65535) {
+      throw ArgumentError('Number must be in the range of 0 to 65535');
+    }
+    // 高字节
+    int highByte = (number >> 8) & 0xFF;
+    // 低字节
+    int lowByte = number & 0xFF;
+    return [highByte, lowByte];
   }
 
-  // 工具方法：将int转换为2字节
-  Uint8List _intTo2Bytes(int value) {
-    final data = ByteData(2);
-    data.setUint16(0, value, Endian.big);
-    return data.buffer.asUint8List();
+// 将 2 位字节转换成为数字
+  int twoBytesToInt(List<int> bytes) {
+    if (bytes.length != 2) {
+      throw ArgumentError('The list must contain exactly 2 bytes');
+    }
+    // 高字节左移 8 位，然后与低字节进行按位或运算
+    return (bytes[0] << 8) | bytes[1];
   }
 
   // 将十六进制字符串转换为字节数据

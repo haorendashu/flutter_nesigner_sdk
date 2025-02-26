@@ -35,6 +35,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static const String aesKey = "0123456789ABCDEF";
   int _counter = 0;
 
   Future<void> _incrementCounter() async {
@@ -59,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var messageId = espService.randomMessageId();
 
     espService.sendMessage(
+        aesKey: aesKey,
         messageType: MsgType.NOSTR_GET_RELAYS,
         messageId: messageId,
         pubkey:
