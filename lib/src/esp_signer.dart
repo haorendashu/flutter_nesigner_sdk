@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
 import 'package:flutter_nesigner_sdk/src/esp_service.dart';
 import 'package:flutter_nesigner_sdk/src/serial_port/serial_port.dart';
+import 'package:flutter_nesigner_sdk/src/utils/crypto_util.dart';
 
 import 'esp_callback.dart';
 
@@ -82,9 +83,11 @@ class EspSigner {
     if (eventIdIntf != null) {
       eventId = eventIdIntf;
     } else {
-      // TODO gen eventId
-      eventId =
-          "0000000000000000000000000000000000000000000000000000000000000000";
+      eventId = genNostrEventId(event);
+    }
+
+    if (eventId == null) {
+      return null;
     }
 
     espService.sendMessage(
@@ -92,7 +95,7 @@ class EspSigner {
         messageType: MsgType.NOSTR_SIGN_EVENT,
         messageId: msgIdByte,
         pubkey: _pubkey!,
-        data: utf8.encode(eventId!));
+        data: utf8.encode(eventId));
 
     return completer.future;
   }
@@ -160,5 +163,21 @@ class EspSigner {
           espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
       callback(decryptedData);
     }
+  }
+
+  String? genNostrEventId(Map map) {
+    if (_pubkey == null) {
+      return null;
+    }
+
+    List list = [];
+    list.add(0);
+    list.add(_pubkey!);
+    list.add(map["created_at"]);
+    list.add(map["kind"]);
+    list.add(map["tags"]);
+    list.add(map["content"]);
+
+    return calculateSHA256FromText(jsonEncode(list));
   }
 }
