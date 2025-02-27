@@ -32,6 +32,8 @@ class EspService {
 
   EspService(this.transport);
 
+  Function(ReceivedMessage reMsg)? onMsg;
+
   static List<String> get availablePorts {
     if (Platform.isIOS) {
       return [];
@@ -114,18 +116,18 @@ class EspService {
   }
 
   // 开始监听消息
-  void startListening(Function(ReceivedMessage) callback) {
+  void startListening() {
     _isReading = true;
     transport.listen((data) {
       print(data);
       // 将新数据追加到缓冲区
       _receiveBuffer = Uint8List.fromList([..._receiveBuffer, ...data]);
-      _processBuffer(callback);
+      _processBuffer();
     });
   }
 
   // 缓冲区分帧处理方法
-  void _processBuffer(Function(ReceivedMessage) callback) {
+  void _processBuffer() {
     while (true) {
       // 检查最小包头长度
       if (_receiveBuffer.length < 54) return; // 2+16+32+4=54
@@ -151,12 +153,12 @@ class EspService {
       _receiveBuffer = _receiveBuffer.sublist(fullFrameLength);
 
       // 处理单个数据帧
-      _parseSingleFrame(frameData, callback);
+      _parseSingleFrame(frameData);
     }
   }
 
   // 单帧解析方法
-  void _parseSingleFrame(Uint8List data, Function(ReceivedMessage) callback) {
+  void _parseSingleFrame(Uint8List data) {
     try {
       final message = ReceivedMessage(
         type: twoBytesToInt(data.sublist(0, 2)),
@@ -169,7 +171,9 @@ class EspService {
       );
 
       if (message.isValid) {
-        callback(message);
+        if (onMsg != null) {
+          onMsg!(message);
+        }
       } else {
         print('CRC校验失败，丢弃消息');
       }

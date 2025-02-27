@@ -1,10 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
-import 'package:flutter_nesigner_sdk/src/esp_service.dart';
-import 'package:flutter_nesigner_sdk/src/serial_port/serial_port.dart';
 import 'package:flutter_nesigner_sdk/src/utils/crypto_util.dart';
 
 import 'esp_callback.dart';
@@ -16,8 +13,10 @@ class EspSigner {
 
   String? _pubkey;
 
-  EspSigner(String key, this.espService) {
-    this._aesKey = key;
+  EspSigner(String key, this.espService, {String? pubkey}) {
+    _aesKey = key;
+    _pubkey = pubkey;
+    espService.onMsg = onMsg;
   }
 
   void start() {
@@ -25,6 +24,7 @@ class EspSigner {
 
     if (_pubkey == null) {
       // getPubkey first!
+      getPublicKey();
     }
   }
 
@@ -163,6 +163,8 @@ class EspSigner {
           espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
       callback(decryptedData);
     }
+
+    _callbacks.remove(msgId);
   }
 
   String? genNostrEventId(Map map) {

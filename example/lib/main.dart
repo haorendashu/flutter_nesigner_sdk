@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
 
 void main() {
@@ -52,10 +50,11 @@ class _MyHomePageState extends State<MyHomePage> {
     var espService = EspService(serialPort);
 
     espService.start();
-    espService.startListening((receivedMessage) {
+    espService.onMsg = (receivedMessage) {
       print(receivedMessage.pubkey);
       print(receivedMessage.encryptedData);
-    });
+    };
+    espService.startListening();
 
     var messageId = espService.randomMessageId();
 
