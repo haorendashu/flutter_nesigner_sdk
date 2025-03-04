@@ -100,16 +100,16 @@ class EspService {
     final header = _buildHeader(encrypted.length);
     final crc = CRCUtil.crc16Calculate(encrypted);
 
-    print("send head ${encrypted.length + 2}");
+    print("send head ${encrypted.length}");
 
     final output = Uint8List.fromList([
       ...intToTwoBytes(messageType),
       ...messageId,
       ...hexToBytes(pubkey),
       ...iv,
+      ...intToTwoBytes(crc),
       ...header,
       ...encrypted,
-      ...intToTwoBytes(crc),
     ]);
 
     print("send fullLength ${output.length}");
@@ -129,8 +129,8 @@ class EspService {
     });
   }
 
-  // 2+16+32+16+4=70
-  static int PREFIX_LENGTH = 70;
+  // 2+16+32+16+2+4=72
+  static int PREFIX_LENGTH = 72;
 
   // 缓冲区分帧处理方法
   void _processBuffer() {
@@ -172,10 +172,10 @@ class EspService {
         id: data.sublist(2, 18),
         pubkey: bytesToHex(data.sublist(18, 50)),
         iv: data.sublist(50, 66),
+        receivedCrc: twoBytesToInt(data.sublist(66, 68)),
         dataLength:
-            ByteData.sublistView(data.sublist(66, 70)).getUint32(0, Endian.big),
-        encryptedData: data.sublist(70, data.length - 2),
-        receivedCrc: twoBytesToInt(data.sublist(data.length - 2)),
+            ByteData.sublistView(data.sublist(68, 72)).getUint32(0, Endian.big),
+        encryptedData: data.sublist(72, data.length),
       );
 
       if (message.isValid) {
@@ -218,7 +218,7 @@ class EspService {
   // 构建4字节长度头
   Uint8List _buildHeader(int dataLength) {
     final header = ByteData(4);
-    header.setUint32(0, dataLength + crcSize, Endian.big);
+    header.setUint32(0, dataLength, Endian.big);
     return header.buffer.asUint8List();
   }
 
