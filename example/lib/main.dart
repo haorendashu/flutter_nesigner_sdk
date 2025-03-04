@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static const String aesKey = "0123456789ABCDEF";
+  static const String aesKey = "0123456789ABCDEF0123456789ABCDEF";
   int _counter = 0;
 
   Future<void> _incrementCounter() async {
@@ -46,7 +46,8 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    SerialPort serialPort = BaseSerialPort(availablePorts.first);
+    // SerialPort serialPort = BaseSerialPort(availablePorts.first);
+    SerialPort serialPort = BaseSerialPort("COM4");
     var espService = EspService(serialPort);
 
     espService.start();

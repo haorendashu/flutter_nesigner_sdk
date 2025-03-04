@@ -29,7 +29,9 @@ class BaseSerialPort extends SerialPort {
         _reader!.close();
       } catch (e) {}
     }
-    return sp.close();
+    sp.close();
+    sp.dispose();
+    return true;
   }
 
   @override

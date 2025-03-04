@@ -94,7 +94,9 @@ class EspService {
     required String pubkey,
     required Uint8List data,
   }) {
-    final encrypted = aesEncrypt(aesKey, data, messageId);
+    var iv = randomMessageId();
+
+    final encrypted = aesEncrypt(aesKey, data, iv);
     final header = _buildHeader(encrypted.length);
     final crc = CRCUtil.crc16Calculate(encrypted);
 
@@ -104,6 +106,7 @@ class EspService {
       ...intToTwoBytes(messageType),
       ...messageId,
       ...hexToBytes(pubkey),
+      ...iv,
       ...header,
       ...encrypted,
       ...intToTwoBytes(crc),
@@ -126,14 +129,18 @@ class EspService {
     });
   }
 
+  // 2+16+32+16+4=70
+  static int PREFIX_LENGTH = 70;
+
   // 缓冲区分帧处理方法
   void _processBuffer() {
     while (true) {
       // 检查最小包头长度
-      if (_receiveBuffer.length < 54) return; // 2+16+32+4=54
+      if (_receiveBuffer.length < PREFIX_LENGTH) return;
 
       // 解析长度头（最后4字节的包头）
-      final headerBytes = _receiveBuffer.sublist(50, 54);
+      final headerBytes =
+          _receiveBuffer.sublist(PREFIX_LENGTH - 4, PREFIX_LENGTH);
       final totalLen =
           ByteData.sublistView(headerBytes).getUint32(0, Endian.big);
 
@@ -143,7 +150,7 @@ class EspService {
       print("id ${bytesToHex(_receiveBuffer.sublist(18, 50))}");
 
       // 计算完整帧长度
-      final fullFrameLength = 54 + totalLen;
+      final fullFrameLength = PREFIX_LENGTH + totalLen;
 
       // 检查是否收到完整帧
       if (_receiveBuffer.length < fullFrameLength) return;
@@ -164,9 +171,10 @@ class EspService {
         type: twoBytesToInt(data.sublist(0, 2)),
         id: data.sublist(2, 18),
         pubkey: bytesToHex(data.sublist(18, 50)),
+        iv: data.sublist(50, 66),
         dataLength:
-            ByteData.sublistView(data.sublist(50, 54)).getUint32(0, Endian.big),
-        encryptedData: data.sublist(54, data.length - 2),
+            ByteData.sublistView(data.sublist(66, 70)).getUint32(0, Endian.big),
+        encryptedData: data.sublist(70, data.length - 2),
         receivedCrc: twoBytesToInt(data.sublist(data.length - 2)),
       );
 
@@ -263,6 +271,7 @@ class ReceivedMessage {
   final int type;
   final Uint8List id;
   final String pubkey;
+  final Uint8List iv;
   final int dataLength;
   final Uint8List encryptedData;
   final int receivedCrc;
@@ -271,6 +280,7 @@ class ReceivedMessage {
     required this.type,
     required this.id,
     required this.pubkey,
+    required this.iv,
     required this.dataLength,
     required this.encryptedData,
     required this.receivedCrc,
