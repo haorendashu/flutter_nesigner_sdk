@@ -129,8 +129,8 @@ class EspService {
     });
   }
 
-  // 2+16+32+16+2+4=72
-  static int PREFIX_LENGTH = 72;
+  // 2+16+2+32+16+2+4=74
+  static int PREFIX_LENGTH = 74;
 
   // 缓冲区分帧处理方法
   void _processBuffer() {
@@ -147,7 +147,7 @@ class EspService {
       print("receive head $totalLen");
       print("receive fullLength ${_receiveBuffer.length}");
       print("type ${twoBytesToInt(_receiveBuffer.sublist(0, 2))}");
-      print("id ${bytesToHex(_receiveBuffer.sublist(18, 50))}");
+      print("id ${bytesToHex(_receiveBuffer.sublist(2, 18))}");
 
       // 计算完整帧长度
       final fullFrameLength = PREFIX_LENGTH + totalLen;
@@ -170,12 +170,13 @@ class EspService {
       final message = ReceivedMessage(
         type: twoBytesToInt(data.sublist(0, 2)),
         id: data.sublist(2, 18),
-        pubkey: bytesToHex(data.sublist(18, 50)),
-        iv: data.sublist(50, 66),
-        receivedCrc: twoBytesToInt(data.sublist(66, 68)),
+        result: twoBytesToInt(data.sublist(18, 20)),
+        pubkey: bytesToHex(data.sublist(20, 52)),
+        iv: data.sublist(52, 68),
+        receivedCrc: twoBytesToInt(data.sublist(68, 70)),
         dataLength:
-            ByteData.sublistView(data.sublist(68, 72)).getUint32(0, Endian.big),
-        encryptedData: data.sublist(72, data.length),
+            ByteData.sublistView(data.sublist(70, 74)).getUint32(0, Endian.big),
+        encryptedData: data.sublist(74, data.length),
       );
 
       if (message.isValid) {
@@ -270,6 +271,7 @@ class EspService {
 class ReceivedMessage {
   final int type;
   final Uint8List id;
+  final int result;
   final String pubkey;
   final Uint8List iv;
   final int dataLength;
@@ -279,6 +281,7 @@ class ReceivedMessage {
   ReceivedMessage({
     required this.type,
     required this.id,
+    required this.result,
     required this.pubkey,
     required this.iv,
     required this.dataLength,

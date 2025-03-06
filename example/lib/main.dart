@@ -61,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     espService.sendMessage(
         aesKey: aesKey,
-        messageType: MsgType.NOSTR_GET_RELAYS,
+        messageType: MsgType.ECHO,
         messageId: messageId,
         pubkey:
             "76a9e845c5431c2e3d339e60bbdafe2ef2f08984f9b20a9bf8d2844e3e0b968e",
