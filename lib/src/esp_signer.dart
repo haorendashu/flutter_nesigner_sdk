@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
 import 'package:flutter_nesigner_sdk/src/utils/crypto_util.dart';
@@ -16,7 +17,6 @@ class EspSigner {
   EspSigner(String key, this.espService, {String? pubkey}) {
     _aesKey = key;
     _pubkey = pubkey;
-    espService.onMsg = onMsg;
   }
 
   void start() {
@@ -44,21 +44,23 @@ class EspSigner {
     var msgIdByte = espService.randomMessageId();
     var completer = Completer<String>();
 
-    _callbacks[espService.bytesToHex(msgIdByte)] = (byteMsg) {
-      var pubkey = utf8.decode(byteMsg);
-      _pubkey = pubkey;
-      completer.complete(_pubkey);
-    };
-
-    var emptyPubkey =
-        "0000000000000000000000000000000000000000000000000000000000000000";
+    var iv = espService.randomMessageId();
+    var data = Uint8List.fromList(iv);
 
     espService.sendMessage(
+        callback: (reMsg) {
+          var decryptedData =
+              espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
+          var pubkey = utf8.decode(decryptedData);
+          _pubkey = pubkey;
+          completer.complete(_pubkey);
+        },
         aesKey: _aesKey,
         messageType: MsgType.NOSTR_GET_PUBLIC_KEY,
         messageId: msgIdByte,
-        pubkey: emptyPubkey,
-        data: utf8.encode(emptyPubkey));
+        pubkey: EspService.EMPTY_PUBKEY,
+        iv: iv,
+        data: data);
 
     return completer.future;
   }
@@ -70,13 +72,6 @@ class EspSigner {
 
     var msgIdByte = espService.randomMessageId();
     var completer = Completer<Map?>();
-
-    _callbacks[espService.bytesToHex(msgIdByte)] = (byteMsg) {
-      var result = utf8.decode(byteMsg);
-      event["sig"] = result;
-
-      completer.complete(event);
-    };
 
     String? eventId;
     var eventIdIntf = event["id"];
@@ -91,6 +86,14 @@ class EspSigner {
     }
 
     espService.sendMessage(
+        callback: (reMsg) {
+          var decryptedData =
+              espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
+          var result = utf8.decode(decryptedData);
+          event["sig"] = result;
+
+          completer.complete(event);
+        },
         aesKey: _aesKey,
         messageType: MsgType.NOSTR_SIGN_EVENT,
         messageId: msgIdByte,
@@ -125,13 +128,13 @@ class EspSigner {
     var msgIdByte = espService.randomMessageId();
     var completer = Completer<String?>();
 
-    _callbacks[espService.bytesToHex(msgIdByte)] = (byteMsg) {
-      var result = utf8.decode(byteMsg);
-
-      completer.complete(result);
-    };
-
     espService.sendMessage(
+        callback: (reMsg) {
+          var decryptedData =
+              espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
+          var result = utf8.decode(decryptedData);
+          completer.complete(result);
+        },
         aesKey: _aesKey,
         messageType: MsgType.NOSTR_NIP04_DECRYPT,
         messageId: msgIdByte,
@@ -151,20 +154,6 @@ class EspSigner {
     }
 
     return true;
-  }
-
-  Map<String, EspCallback> _callbacks = {};
-
-  void onMsg(ReceivedMessage reMsg) {
-    var msgId = espService.bytesToHex(reMsg.id);
-    var callback = _callbacks[msgId];
-    if (callback != null) {
-      var decryptedData =
-          espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
-      callback(decryptedData);
-    }
-
-    _callbacks.remove(msgId);
   }
 
   String? genNostrEventId(Map map) {

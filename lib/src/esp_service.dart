@@ -10,6 +10,7 @@ import 'package:flutter_nesigner_sdk/src/transport/transport.dart';
 import 'package:libserialport/libserialport.dart' as ls;
 import 'package:encrypt/encrypt.dart' as encrypt;
 
+import '../flutter_nesigner_sdk.dart';
 import 'utils/crc_util.dart';
 
 /// EspService .
@@ -24,6 +25,9 @@ class EspService {
   static const int headerSize = 4;
   static const int crcSize = 2;
 
+  static const String EMPTY_PUBKEY =
+      "0000000000000000000000000000000000000000000000000000000000000000";
+
   bool _isReading = false;
 
   Transport transport;
@@ -32,14 +36,105 @@ class EspService {
 
   EspService(this.transport);
 
-  Function(ReceivedMessage reMsg)? onMsg;
-
   static List<String> get availablePorts {
     if (Platform.isIOS) {
       return [];
     }
 
     return ls.SerialPort.availablePorts;
+  }
+
+  Map<String, EspCallback> _callbacks = {};
+
+  void onMsg(ReceivedMessage reMsg) {
+    var msgId = bytesToHex(reMsg.id);
+    var callback = _callbacks[msgId];
+    if (callback != null) {
+      callback(reMsg);
+    }
+
+    _callbacks.remove(msgId);
+  }
+
+  Future<int?> ping() async {
+    var msgIdByte = randomMessageId();
+
+    var startTime = DateTime.now().millisecondsSinceEpoch;
+    var completer = Completer<int?>();
+
+    sendMessage(
+        callback: (reMsg) {
+          var endTime = DateTime.now().millisecondsSinceEpoch;
+          completer.complete(endTime - startTime);
+        },
+        messageType: MsgType.PING,
+        messageId: msgIdByte,
+        pubkey: EMPTY_PUBKEY,
+        data: Uint8List.fromList([]));
+
+    return await completer.future.timeout(const Duration(seconds: 10));
+  }
+
+  Future<String?> echo(String aesKey, String msgContent) {
+    var msgIdByte = randomMessageId();
+    var completer = Completer<String?>();
+
+    var data = utf8.encode(msgContent);
+
+    sendMessage(
+        callback: (reMsg) {
+          var decryptedData = aesDecrypt(aesKey, reMsg.encryptedData, reMsg.iv);
+          completer.complete(utf8.decode(decryptedData));
+        },
+        aesKey: aesKey,
+        messageType: MsgType.REMOVE_KEY,
+        messageId: msgIdByte,
+        pubkey: EMPTY_PUBKEY,
+        data: data);
+
+    return completer.future;
+  }
+
+  Future<int?> updateKey(String aesKey, String key) async {
+    var msgIdByte = randomMessageId();
+    var completer = Completer<int?>();
+
+    final data = Uint8List.fromList([
+      ...hexToBytes(key),
+      ...hexToBytes(aesKey),
+    ]);
+
+    sendMessage(
+        callback: (reMsg) {
+          completer.complete(reMsg.result);
+        },
+        aesKey: aesKey,
+        messageType: MsgType.UPDATE_KEY,
+        messageId: msgIdByte,
+        pubkey: EMPTY_PUBKEY,
+        data: data);
+
+    return await completer.future;
+  }
+
+  Future<int?> removeKey(String aesKey) async {
+    var msgIdByte = randomMessageId();
+    var completer = Completer<int?>();
+
+    var iv = randomMessageId();
+    var data = Uint8List.fromList(iv);
+
+    sendMessage(
+        callback: (reMsg) {
+          completer.complete(reMsg.result);
+        },
+        aesKey: aesKey,
+        messageType: MsgType.REMOVE_KEY,
+        messageId: msgIdByte,
+        pubkey: EMPTY_PUBKEY,
+        data: data);
+
+    return completer.future;
   }
 
   Timer? _timer;
@@ -88,19 +183,28 @@ class EspService {
 
   // 发送消息
   void sendMessage({
-    required String aesKey,
+    EspCallback? callback,
+    String? aesKey,
     required int messageType,
     required Uint8List messageId,
     required String pubkey,
     required Uint8List data,
+    Uint8List? iv,
   }) {
-    var iv = randomMessageId();
+    if (callback != null) {
+      _callbacks[bytesToHex(messageId)] = callback;
+    }
 
-    final encrypted = aesEncrypt(aesKey, data, iv);
-    final header = _buildHeader(encrypted.length);
-    final crc = CRCUtil.crc16Calculate(encrypted);
+    iv ??= randomMessageId();
 
-    print("send head ${encrypted.length}");
+    if (aesKey != null) {
+      data = aesEncrypt(aesKey, data, iv);
+    }
+    int dataLength = data.length;
+    final header = _buildHeader(dataLength);
+    final crc = CRCUtil.crc16Calculate(data);
+
+    print("send head ${data.length}");
 
     final output = Uint8List.fromList([
       ...intToTwoBytes(messageType),
@@ -109,7 +213,7 @@ class EspService {
       ...iv,
       ...intToTwoBytes(crc),
       ...header,
-      ...encrypted,
+      ...data,
     ]);
 
     print("send fullLength ${output.length}");
@@ -180,9 +284,7 @@ class EspService {
       );
 
       if (message.isValid) {
-        if (onMsg != null) {
-          onMsg!(message);
-        }
+        onMsg(message);
       } else {
         print('CRC校验失败，丢弃消息');
       }
@@ -207,9 +309,9 @@ class EspService {
   }
 
   // AES解密
-  Uint8List aesDecrypt(String aesKey, Uint8List input, Uint8List messageId) {
+  Uint8List aesDecrypt(String aesKey, Uint8List input, Uint8List ivData) {
     final key = encrypt.Key.fromUtf8(aesKey);
-    final iv = encrypt.IV(messageId);
+    final iv = encrypt.IV(ivData);
     final encrypter =
         encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.ctr));
     return Uint8List.fromList(

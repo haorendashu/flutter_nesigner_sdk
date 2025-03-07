@@ -51,15 +51,15 @@ class _MyHomePageState extends State<MyHomePage> {
     var espService = EspService(serialPort);
 
     espService.start();
-    espService.onMsg = (receivedMessage) {
-      print(receivedMessage.pubkey);
-      print(receivedMessage.encryptedData);
-    };
     espService.startListening();
 
     var messageId = espService.randomMessageId();
 
     espService.sendMessage(
+        callback: (reMsg) {
+          print(reMsg.pubkey);
+          print(reMsg.encryptedData);
+        },
         aesKey: aesKey,
         messageType: MsgType.ECHO,
         messageId: messageId,
@@ -67,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
             "76a9e845c5431c2e3d339e60bbdafe2ef2f08984f9b20a9bf8d2844e3e0b968e",
         data: utf8.encode("hello"));
 
-    await Future.delayed(Duration(minutes: 1));
+    await Future.delayed(Duration(seconds: 30));
 
     espService.stop();
   }
