@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
@@ -53,19 +54,27 @@ class _MyHomePageState extends State<MyHomePage> {
     espService.start();
     espService.startListening();
 
-    var messageId = espService.randomMessageId();
+    String pin = "12345678";
+    final aesKey = Uint8List.fromList(genMd5ForBytes(pin));
+    String testPrivateKey =
+        "d29ec99c3cc9f8bb0e4a47a32c13d170c286a245a4946ef84453dee14d5ece4b";
 
-    espService.sendMessage(
-        callback: (reMsg) {
-          print(reMsg.pubkey);
-          print(reMsg.encryptedData);
-        },
-        aesKey: aesKey,
-        messageType: MsgType.ECHO,
-        messageId: messageId,
-        pubkey:
-            "76a9e845c5431c2e3d339e60bbdafe2ef2f08984f9b20a9bf8d2844e3e0b968e",
-        data: utf8.encode("hello"));
+    var result = await espService.updateKey(aesKey, testPrivateKey);
+    print("result $result");
+
+    // var messageId = espService.randomMessageId();
+
+    // espService.sendMessage(
+    //     callback: (reMsg) {
+    //       print(reMsg.pubkey);
+    //       print(reMsg.encryptedData);
+    //     },
+    //     aesKey: aesKey,
+    //     messageType: MsgType.ECHO,
+    //     messageId: messageId,
+    //     pubkey:
+    //         "76a9e845c5431c2e3d339e60bbdafe2ef2f08984f9b20a9bf8d2844e3e0b968e",
+    //     data: utf8.encode("hello"));
 
     await Future.delayed(Duration(seconds: 30));
 

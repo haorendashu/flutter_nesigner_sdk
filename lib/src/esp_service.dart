@@ -75,7 +75,7 @@ class EspService {
     return await completer.future.timeout(const Duration(seconds: 10));
   }
 
-  Future<String?> echo(String aesKey, String msgContent) {
+  Future<String?> echo(Uint8List aesKey, String msgContent) {
     var msgIdByte = randomMessageId();
     var completer = Completer<String?>();
 
@@ -95,29 +95,29 @@ class EspService {
     return completer.future;
   }
 
-  Future<int?> updateKey(String aesKey, String key) async {
+  Future<int?> updateKey(Uint8List aesKey, String key) async {
     var msgIdByte = randomMessageId();
     var completer = Completer<int?>();
 
     final data = Uint8List.fromList([
       ...hexToBytes(key),
-      ...hexToBytes(aesKey),
+      ...aesKey,
     ]);
 
     sendMessage(
         callback: (reMsg) {
           completer.complete(reMsg.result);
         },
-        aesKey: aesKey,
+        aesKey: null,
         messageType: MsgType.UPDATE_KEY,
         messageId: msgIdByte,
         pubkey: EMPTY_PUBKEY,
         data: data);
 
-    return await completer.future;
+    return await completer.future.timeout(Duration(seconds: 30));
   }
 
-  Future<int?> removeKey(String aesKey) async {
+  Future<int?> removeKey(Uint8List aesKey) async {
     var msgIdByte = randomMessageId();
     var completer = Completer<int?>();
 
@@ -184,7 +184,7 @@ class EspService {
   // 发送消息
   void sendMessage({
     EspCallback? callback,
-    String? aesKey,
+    Uint8List? aesKey,
     required int messageType,
     required Uint8List messageId,
     required String pubkey,
@@ -300,8 +300,8 @@ class EspService {
   }
 
   // AES加密
-  Uint8List aesEncrypt(String aesKey, Uint8List input, Uint8List messageId) {
-    final key = encrypt.Key.fromUtf8(aesKey);
+  Uint8List aesEncrypt(Uint8List aesKey, Uint8List input, Uint8List messageId) {
+    final key = encrypt.Key(aesKey);
     final iv = encrypt.IV(messageId);
     final encrypter =
         encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.ctr));
@@ -309,8 +309,8 @@ class EspService {
   }
 
   // AES解密
-  Uint8List aesDecrypt(String aesKey, Uint8List input, Uint8List ivData) {
-    final key = encrypt.Key.fromUtf8(aesKey);
+  Uint8List aesDecrypt(Uint8List aesKey, Uint8List input, Uint8List ivData) {
+    final key = encrypt.Key(aesKey);
     final iv = encrypt.IV(ivData);
     final encrypter =
         encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.ctr));
@@ -392,8 +392,11 @@ class ReceivedMessage {
   });
 
   bool get isValid {
-    final calculatedCrc = CRCUtil.crc16Calculate(encryptedData);
-    return calculatedCrc == receivedCrc;
+    if (dataLength > 0) {
+      final calculatedCrc = CRCUtil.crc16Calculate(encryptedData);
+      return calculatedCrc == receivedCrc;
+    }
+    return true;
   }
 
   // Uint8List get decryptedData {

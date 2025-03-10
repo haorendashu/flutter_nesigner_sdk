@@ -3,18 +3,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
-import 'package:flutter_nesigner_sdk/src/utils/crypto_util.dart';
-
-import 'esp_callback.dart';
 
 class EspSigner {
   late EspService espService;
 
-  late String _aesKey;
+  late Uint8List _aesKey;
 
   String? _pubkey;
 
-  EspSigner(String key, this.espService, {String? pubkey}) {
+  EspSigner(Uint8List key, this.espService, {String? pubkey}) {
     _aesKey = key;
     _pubkey = pubkey;
   }
