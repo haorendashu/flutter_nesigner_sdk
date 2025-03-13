@@ -50,9 +50,11 @@ class EspSigner {
         callback: (reMsg) {
           if (reMsg.result == MsgResult.OK) {
             var decryptedData =
-                espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
+                espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
+            print(decryptedData);
             var pubkey = HEX.encode(decryptedData);
-            _pubkey = pubkey;
+            _pubkey = espService.bytesToHex(decryptedData);
+            print("pubkey $pubkey $_pubkey");
             completer.complete(_pubkey);
           } else {
             completer.complete(null);
@@ -91,7 +93,7 @@ class EspSigner {
     espService.sendMessage(
         callback: (reMsg) {
           var decryptedData =
-              espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
+              espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
           var result = utf8.decode(decryptedData);
           event["sig"] = result;
 
@@ -106,24 +108,24 @@ class EspSigner {
     return completer.future.timeout(EspService.TIMEOUT);
   }
 
-  Future<String?> encrypt(pubkey, plaintext) async {
+  Future<String?> encrypt(String pubkey, String plaintext) async {
     return _encryptOrDecrypt(MsgType.NOSTR_NIP04_ENCRYPT, pubkey, plaintext);
   }
 
-  Future<String?> decrypt(pubkey, ciphertext) async {
+  Future<String?> decrypt(String pubkey, String ciphertext) async {
     return _encryptOrDecrypt(MsgType.NOSTR_NIP04_DECRYPT, pubkey, ciphertext);
   }
 
-  Future<String?> nip44Encrypt(pubkey, plaintext) async {
+  Future<String?> nip44Encrypt(String pubkey, String plaintext) async {
     return _encryptOrDecrypt(MsgType.NOSTR_NIP44_ENCRYPT, pubkey, plaintext);
   }
 
-  Future<String?> nip44Decrypt(pubkey, ciphertext) async {
+  Future<String?> nip44Decrypt(String pubkey, String ciphertext) async {
     return _encryptOrDecrypt(MsgType.NOSTR_NIP44_DECRYPT, pubkey, ciphertext);
   }
 
   Future<String?> _encryptOrDecrypt(
-      int msgType, String pubkey, targetText) async {
+      int msgType, String pubkey, String targetText) async {
     if (!(await _checkPubkey())) {
       return null;
     }
@@ -133,10 +135,14 @@ class EspSigner {
 
     espService.sendMessage(
         callback: (reMsg) {
-          var decryptedData =
-              espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
-          var result = utf8.decode(decryptedData);
-          completer.complete(result);
+          if (reMsg.result == MsgResult.OK) {
+            var decryptedData =
+                espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
+            var result = utf8.decode(decryptedData);
+            completer.complete(result);
+          } else {
+            completer.complete(null);
+          }
         },
         aesKey: _aesKey,
         messageType: MsgType.NOSTR_NIP04_DECRYPT,
