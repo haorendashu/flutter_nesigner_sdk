@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
+import 'package:flutter_nesigner_sdk/src/consts/msg_result.dart';
 
 class EspSigner {
   late EspService espService;
@@ -38,19 +39,24 @@ class EspSigner {
       return _pubkey;
     }
 
-    var msgIdByte = espService.randomMessageId();
-    var completer = Completer<String>();
+    var msgIdByte = EspService.randomMessageId();
+    var completer = Completer<String?>();
 
-    var iv = espService.randomMessageId();
-    var data = Uint8List.fromList(iv);
+    var iv = EspService.randomMessageId();
+    var data = Uint8List.fromList(iv.toList());
 
     espService.sendMessage(
         callback: (reMsg) {
-          var decryptedData =
-              espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
-          var pubkey = utf8.decode(decryptedData);
-          _pubkey = pubkey;
-          completer.complete(_pubkey);
+          if (reMsg.result == MsgResult.OK) {
+            var decryptedData =
+                espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
+            var pubkey = String.fromCharCodes(decryptedData);
+            print("pubkey $pubkey");
+            _pubkey = pubkey;
+            completer.complete(_pubkey);
+          } else {
+            completer.complete(null);
+          }
         },
         aesKey: _aesKey,
         messageType: MsgType.NOSTR_GET_PUBLIC_KEY,
@@ -59,7 +65,7 @@ class EspSigner {
         iv: iv,
         data: data);
 
-    return completer.future;
+    return completer.future.timeout(EspService.TIMEOUT);
   }
 
   Future<Map?> signEvent(Map event) async {
@@ -67,7 +73,7 @@ class EspSigner {
       return null;
     }
 
-    var msgIdByte = espService.randomMessageId();
+    var msgIdByte = EspService.randomMessageId();
     var completer = Completer<Map?>();
 
     String? eventId;
@@ -97,7 +103,7 @@ class EspSigner {
         pubkey: _pubkey!,
         data: utf8.encode(eventId));
 
-    return completer.future;
+    return completer.future.timeout(EspService.TIMEOUT);
   }
 
   Future<String?> encrypt(pubkey, plaintext) async {
@@ -122,7 +128,7 @@ class EspSigner {
       return null;
     }
 
-    var msgIdByte = espService.randomMessageId();
+    var msgIdByte = EspService.randomMessageId();
     var completer = Completer<String?>();
 
     espService.sendMessage(
@@ -138,7 +144,7 @@ class EspSigner {
         pubkey: _pubkey!,
         data: utf8.encode(pubkey + targetText));
 
-    return completer.future;
+    return completer.future.timeout(EspService.TIMEOUT);
   }
 
   Future<bool> _checkPubkey() async {

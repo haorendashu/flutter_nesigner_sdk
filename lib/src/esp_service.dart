@@ -4,11 +4,13 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter_nesigner_sdk/src/consts/msg_result.dart';
 import 'package:flutter_nesigner_sdk/src/esp_callback.dart';
 import 'package:flutter_nesigner_sdk/src/serial_port/serial_port.dart';
 import 'package:flutter_nesigner_sdk/src/transport/transport.dart';
 import 'package:libserialport/libserialport.dart' as ls;
-import 'package:encrypt/encrypt.dart' as encrypt;
+// import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:pointycastle/export.dart';
 
 import '../flutter_nesigner_sdk.dart';
 import 'utils/crc_util.dart';
@@ -27,6 +29,8 @@ class EspService {
 
   static const String EMPTY_PUBKEY =
       "0000000000000000000000000000000000000000000000000000000000000000";
+
+  static const TIMEOUT = Duration(seconds: 10);
 
   bool _isReading = false;
 
@@ -72,7 +76,7 @@ class EspService {
         pubkey: EMPTY_PUBKEY,
         data: Uint8List.fromList([]));
 
-    return await completer.future.timeout(const Duration(seconds: 10));
+    return await completer.future.timeout(TIMEOUT);
   }
 
   Future<String?> echo(Uint8List aesKey, String msgContent) {
@@ -83,16 +87,21 @@ class EspService {
 
     sendMessage(
         callback: (reMsg) {
-          var decryptedData = aesDecrypt(aesKey, reMsg.encryptedData, reMsg.iv);
-          completer.complete(utf8.decode(decryptedData));
+          if (reMsg.result == MsgResult.OK) {
+            var decryptedData =
+                aesDecrypt(aesKey, reMsg.encryptedData, reMsg.iv);
+            completer.complete(utf8.decode(decryptedData));
+          } else {
+            completer.complete(null);
+          }
         },
         aesKey: aesKey,
-        messageType: MsgType.REMOVE_KEY,
+        messageType: MsgType.ECHO,
         messageId: msgIdByte,
         pubkey: EMPTY_PUBKEY,
         data: data);
 
-    return completer.future;
+    return completer.future.timeout(EspService.TIMEOUT);
   }
 
   Future<int?> updateKey(Uint8List aesKey, String key) async {
@@ -114,7 +123,7 @@ class EspService {
         pubkey: EMPTY_PUBKEY,
         data: data);
 
-    return await completer.future.timeout(Duration(seconds: 30));
+    return await completer.future.timeout(EspService.TIMEOUT);
   }
 
   Future<int?> removeKey(Uint8List aesKey) async {
@@ -134,7 +143,7 @@ class EspService {
         pubkey: EMPTY_PUBKEY,
         data: data);
 
-    return completer.future;
+    return completer.future.timeout(EspService.TIMEOUT);
   }
 
   Timer? _timer;
@@ -171,7 +180,7 @@ class EspService {
     }
   }
 
-  Uint8List randomMessageId() {
+  static Uint8List randomMessageId() {
     var messageId = Uint8List(16);
     var random = Random();
     for (var i = 0; i < 16; i++) {
@@ -199,6 +208,8 @@ class EspService {
 
     if (aesKey != null) {
       data = aesEncrypt(aesKey, data, iv);
+      print("data encrypted length ${data.length}");
+      print(data);
     }
     int dataLength = data.length;
     final header = _buildHeader(dataLength);
@@ -283,6 +294,8 @@ class EspService {
         encryptedData: data.sublist(74, data.length),
       );
 
+      print("result ${message.result}");
+
       if (message.isValid) {
         onMsg(message);
       } else {
@@ -300,22 +313,27 @@ class EspService {
   }
 
   // AES加密
-  Uint8List aesEncrypt(Uint8List aesKey, Uint8List input, Uint8List messageId) {
-    final key = encrypt.Key(aesKey);
-    final iv = encrypt.IV(messageId);
-    final encrypter =
-        encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.ctr));
-    return encrypter.encryptBytes(input, iv: iv).bytes;
+  Uint8List aesEncrypt(Uint8List aesKey, Uint8List input, Uint8List ivData) {
+    final cipherCbc =
+        PaddedBlockCipherImpl(PKCS7Padding(), CBCBlockCipher(AESEngine()));
+    final paramsCbc = PaddedBlockCipherParameters(
+        ParametersWithIV(KeyParameter(Uint8List.fromList(aesKey)), ivData),
+        null);
+    cipherCbc.init(true, paramsCbc);
+
+    return cipherCbc.process(input);
   }
 
   // AES解密
   Uint8List aesDecrypt(Uint8List aesKey, Uint8List input, Uint8List ivData) {
-    final key = encrypt.Key(aesKey);
-    final iv = encrypt.IV(ivData);
-    final encrypter =
-        encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.ctr));
-    return Uint8List.fromList(
-        encrypter.decryptBytes(encrypt.Encrypted(input), iv: iv));
+    final cipherCbc =
+        PaddedBlockCipherImpl(PKCS7Padding(), CBCBlockCipher(AESEngine()));
+    final paramsCbc = PaddedBlockCipherParameters(
+        ParametersWithIV(KeyParameter(Uint8List.fromList(aesKey)), ivData),
+        null);
+    cipherCbc.init(false, paramsCbc);
+
+    return cipherCbc.process(input);
   }
 
   // 构建4字节长度头

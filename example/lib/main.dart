@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
+import 'package:hex/hex.dart';
 
 void main() {
   runApp(const MyApp());
@@ -56,11 +57,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
     String pin = "12345678";
     final aesKey = Uint8List.fromList(genMd5ForBytes(pin));
+
     String testPrivateKey =
         "d29ec99c3cc9f8bb0e4a47a32c13d170c286a245a4946ef84453dee14d5ece4b";
 
-    var result = await espService.updateKey(aesKey, testPrivateKey);
-    print("result $result");
+    // var result =
+    //     await espService.echo(aesKey, "Hello, this is a message from nesigner");
+    // print(result);
+
+    // var result = await espService.updateKey(aesKey, testPrivateKey);
+    // print("result $result");
+
+    var espSigner = EspSigner(aesKey, espService);
+    await espSigner.getPublicKey();
 
     // var messageId = espService.randomMessageId();
 
