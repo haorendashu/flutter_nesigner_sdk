@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
 import 'package:flutter_nesigner_sdk/src/consts/msg_result.dart';
+import 'package:hex/hex.dart';
 
 class EspSigner {
   late EspService espService;
@@ -50,8 +51,7 @@ class EspSigner {
           if (reMsg.result == MsgResult.OK) {
             var decryptedData =
                 espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.id);
-            var pubkey = String.fromCharCodes(decryptedData);
-            print("pubkey $pubkey");
+            var pubkey = HEX.encode(decryptedData);
             _pubkey = pubkey;
             completer.complete(_pubkey);
           } else {
