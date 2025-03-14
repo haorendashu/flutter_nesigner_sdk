@@ -52,9 +52,7 @@ class EspSigner {
             var decryptedData =
                 espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
             print(decryptedData);
-            var pubkey = HEX.encode(decryptedData);
             _pubkey = espService.bytesToHex(decryptedData);
-            print("pubkey $pubkey $_pubkey");
             completer.complete(_pubkey);
           } else {
             completer.complete(null);
@@ -145,10 +143,13 @@ class EspSigner {
           }
         },
         aesKey: _aesKey,
-        messageType: MsgType.NOSTR_NIP04_DECRYPT,
+        messageType: msgType,
         messageId: msgIdByte,
         pubkey: _pubkey!,
-        data: utf8.encode(pubkey + targetText));
+        data: Uint8List.fromList([
+          ...HEX.decode(pubkey),
+          ...utf8.encode(targetText),
+        ]));
 
     return completer.future.timeout(EspService.TIMEOUT);
   }

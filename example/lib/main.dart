@@ -85,11 +85,22 @@ class _MyHomePageState extends State<MyHomePage> {
     var theirPubkey =
         "1456e77bf02c6fe604879f61e6c7f772ceec3f9f0116aef3828377d447c5c291";
 
+    print("private key");
+    print(HEX.decode(testPrivateKey));
+    print("pubkey");
+    print(HEX.decode(theirPubkey));
+
     var TEST_TEXT = "Hello, Nostr! This is a test message.";
     var encryptedText = await espSigner.encrypt(theirPubkey, TEST_TEXT);
     print("encryptedText $encryptedText");
 
     var sourceText = await espSigner.decrypt(theirPubkey, encryptedText!);
+    print("sourceText $sourceText");
+
+    encryptedText = await espSigner.nip44Encrypt(theirPubkey, TEST_TEXT);
+    print("encryptedText $encryptedText");
+
+    sourceText = await espSigner.nip44Decrypt(theirPubkey, encryptedText!);
     print("sourceText $sourceText");
 
     // var messageId = espService.randomMessageId();
