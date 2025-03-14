@@ -68,7 +68,7 @@ class EspSigner {
     return completer.future.timeout(EspService.TIMEOUT);
   }
 
-  Future<Map?> signEvent(Map event) async {
+  Future<Map<dynamic, dynamic>?> signEvent(Map event) async {
     if (!(await _checkPubkey())) {
       return null;
     }
@@ -88,20 +88,27 @@ class EspSigner {
       return null;
     }
 
+    event["id"] = eventId;
+    event["pubkey"] = _pubkey!;
+
     espService.sendMessage(
         callback: (reMsg) {
-          var decryptedData =
-              espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
-          var result = utf8.decode(decryptedData);
-          event["sig"] = result;
+          if (reMsg.result == MsgResult.OK) {
+            var decryptedData =
+                espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
+            var sig = HEX.encode(decryptedData);
+            event["sig"] = sig;
 
-          completer.complete(event);
+            completer.complete(event);
+          } else {
+            completer.complete(null);
+          }
         },
         aesKey: _aesKey,
         messageType: MsgType.NOSTR_SIGN_EVENT,
         messageId: msgIdByte,
         pubkey: _pubkey!,
-        data: utf8.encode(eventId));
+        data: Uint8List.fromList(HEX.decode(eventId)));
 
     return completer.future.timeout(EspService.TIMEOUT);
   }

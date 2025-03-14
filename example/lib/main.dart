@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
 import 'package:hex/hex.dart';
+import 'package:ndk/domain_layer/entities/nip_01_event.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,18 +59,18 @@ class _MyHomePageState extends State<MyHomePage> {
     final aesKey = Uint8List.fromList(genMd5ForBytes(pin));
     print("aesKey hex ${HEX.encode(aesKey)}");
 
-    String testPrivateKey =
-        "d29ec99c3cc9f8bb0e4a47a32c13d170c286a245a4946ef84453dee14d5ece4b";
+    // String testPrivateKey =
+    //     "d29ec99c3cc9f8bb0e4a47a32c13d170c286a245a4946ef84453dee14d5ece4b";
 
-    var iv_hex = "47221dadca56ba6849c0350626092d03";
-    var encrypted_hex =
-        "ea6e903250b2b118aee5c2d4c444a088eecb8a40743fe0c961c31de476b6cdddd752eba6281af76a1524892c2303e026";
+    // var iv_hex = "47221dadca56ba6849c0350626092d03";
+    // var encrypted_hex =
+    //     "ea6e903250b2b118aee5c2d4c444a088eecb8a40743fe0c961c31de476b6cdddd752eba6281af76a1524892c2303e026";
 
-    var source = espService.aesDecrypt(
-        aesKey,
-        Uint8List.fromList(HEX.decode(encrypted_hex)),
-        Uint8List.fromList(HEX.decode(iv_hex)));
-    print(String.fromCharCodes(source));
+    // var source = espService.aesDecrypt(
+    //     aesKey,
+    //     Uint8List.fromList(HEX.decode(encrypted_hex)),
+    //     Uint8List.fromList(HEX.decode(iv_hex)));
+    // print(String.fromCharCodes(source));
 
     // var result =
     //     await espService.echo(aesKey, "Hello, this is a message from nesigner");
@@ -82,26 +83,37 @@ class _MyHomePageState extends State<MyHomePage> {
     var pubkey = await espSigner.getPublicKey();
     print("pubkey $pubkey");
 
+    var result = await espService.removeKey(aesKey);
+    print("result $result");
+
     var theirPubkey =
         "1456e77bf02c6fe604879f61e6c7f772ceec3f9f0116aef3828377d447c5c291";
 
-    print("private key");
-    print(HEX.decode(testPrivateKey));
-    print("pubkey");
-    print(HEX.decode(theirPubkey));
+    // var event = Map();
+    // event["created_at"] = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    // event["kind"] = 1;
+    // event["tags"] = [];
+    // event["content"] = "Hello nostr!";
+    // var eventResult = await espSigner.signEvent(event);
+    // print(eventResult);
 
-    var TEST_TEXT = "Hello, Nostr! This is a test message.";
-    var encryptedText = await espSigner.encrypt(theirPubkey, TEST_TEXT);
-    print("encryptedText $encryptedText");
+    // if (eventResult != null) {
+    //   var nip01Event = Nip01Event.fromJson(eventResult);
+    //   print("nip01Event.isIdValid ${nip01Event.isIdValid}");
+    // }
 
-    var sourceText = await espSigner.decrypt(theirPubkey, encryptedText!);
-    print("sourceText $sourceText");
+    // var TEST_TEXT = "Hello, Nostr! This is a test message.";
+    // var encryptedText = await espSigner.encrypt(theirPubkey, TEST_TEXT);
+    // print("encryptedText $encryptedText");
 
-    encryptedText = await espSigner.nip44Encrypt(theirPubkey, TEST_TEXT);
-    print("encryptedText $encryptedText");
+    // var sourceText = await espSigner.decrypt(theirPubkey, encryptedText!);
+    // print("sourceText $sourceText");
 
-    sourceText = await espSigner.nip44Decrypt(theirPubkey, encryptedText!);
-    print("sourceText $sourceText");
+    // encryptedText = await espSigner.nip44Encrypt(theirPubkey, TEST_TEXT);
+    // print("encryptedText $encryptedText");
+
+    // sourceText = await espSigner.nip44Decrypt(theirPubkey, encryptedText!);
+    // print("sourceText $sourceText");
 
     // var messageId = espService.randomMessageId();
 
