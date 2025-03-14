@@ -135,12 +135,17 @@ class EspService {
 
     sendMessage(
         callback: (reMsg) {
-          completer.complete(reMsg.result);
+          if (reMsg.result == MsgResult.OK) {
+            completer.complete(reMsg.result);
+          } else {
+            completer.complete(null);
+          }
         },
         aesKey: aesKey,
         messageType: MsgType.REMOVE_KEY,
         messageId: msgIdByte,
         pubkey: EMPTY_PUBKEY,
+        iv: iv,
         data: data);
 
     return completer.future.timeout(EspService.TIMEOUT);

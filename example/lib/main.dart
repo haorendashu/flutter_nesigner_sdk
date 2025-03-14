@@ -59,8 +59,8 @@ class _MyHomePageState extends State<MyHomePage> {
     final aesKey = Uint8List.fromList(genMd5ForBytes(pin));
     print("aesKey hex ${HEX.encode(aesKey)}");
 
-    // String testPrivateKey =
-    //     "d29ec99c3cc9f8bb0e4a47a32c13d170c286a245a4946ef84453dee14d5ece4b";
+    String testPrivateKey =
+        "d29ec99c3cc9f8bb0e4a47a32c13d170c286a245a4946ef84453dee14d5ece4b";
 
     // var iv_hex = "47221dadca56ba6849c0350626092d03";
     // var encrypted_hex =
@@ -76,15 +76,15 @@ class _MyHomePageState extends State<MyHomePage> {
     //     await espService.echo(aesKey, "Hello, this is a message from nesigner");
     // print(result);
 
-    // var result = await espService.updateKey(aesKey, testPrivateKey);
-    // print("result $result");
+    var result = await espService.updateKey(aesKey, testPrivateKey);
+    print("result $result");
 
     var espSigner = EspSigner(aesKey, espService);
     var pubkey = await espSigner.getPublicKey();
     print("pubkey $pubkey");
 
-    var result = await espService.removeKey(aesKey);
-    print("result $result");
+    // var result = await espService.removeKey(aesKey);
+    // print("result $result");
 
     var theirPubkey =
         "1456e77bf02c6fe604879f61e6c7f772ceec3f9f0116aef3828377d447c5c291";
