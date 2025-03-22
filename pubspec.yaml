@@ -13,13 +13,20 @@ dependencies:
   flutter_libserialport: ^0.5.0  
   # encrypt: ^5.0.3
   crypto: ^3.0.6
-  pointycastle: ^4.0.0
+  kepler: ^1.0.3
+  pointycastle: ^3.6.0
   hex: ^0.2.0
+  cryptography: ^2.7.0
+  cryptography_flutter: ^2.3.2
+  bip340: ^0.3.0
+  string_validator: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+
+dependency_overrides:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -51,7 +51,6 @@ class EspSigner {
           if (reMsg.result == MsgResult.OK) {
             var decryptedData =
                 espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
-            print(decryptedData);
             _pubkey = espService.bytesToHex(decryptedData);
             completer.complete(_pubkey);
           } else {

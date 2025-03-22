@@ -79,9 +79,9 @@ class _MyHomePageState extends State<MyHomePage> {
     var result = await espService.updateKey(aesKey, testPrivateKey);
     print("result $result");
 
-    var espSigner = EspSigner(aesKey, espService);
-    var pubkey = await espSigner.getPublicKey();
-    print("pubkey $pubkey");
+    // var espSigner = EspSigner(aesKey, espService);
+    // var pubkey = await espSigner.getPublicKey();
+    // print("pubkey $pubkey");
 
     // var result = await espService.removeKey(aesKey);
     // print("result $result");

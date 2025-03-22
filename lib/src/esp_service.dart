@@ -6,6 +6,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_nesigner_sdk/src/consts/msg_result.dart';
 import 'package:flutter_nesigner_sdk/src/esp_callback.dart';
+import 'package:flutter_nesigner_sdk/src/nostr_util/keys.dart';
+import 'package:flutter_nesigner_sdk/src/nostr_util/nip44_v2.dart';
 import 'package:flutter_nesigner_sdk/src/serial_port/serial_port.dart';
 import 'package:flutter_nesigner_sdk/src/transport/transport.dart';
 import 'package:libserialport/libserialport.dart' as ls;
@@ -108,10 +110,24 @@ class EspService {
     var msgIdByte = randomMessageId();
     var completer = Completer<int?>();
 
-    final data = Uint8List.fromList([
+    final sourceData = Uint8List.fromList([
       ...hexToBytes(key),
       ...aesKey,
     ]);
+
+    var signerTempPubkey = await getTempPubkey();
+    if (signerTempPubkey == null) {
+      return null;
+    }
+
+    var currentPubkey = getPublicKey(key);
+
+    var conversationKey = NIP44V2.shareSecret(key, signerTempPubkey);
+    var encryptedText = await NIP44V2.encrypt(
+        String.fromCharCodes(sourceData), conversationKey);
+    print("encryptedText $encryptedText");
+    print(Uint8List.fromList(encryptedText.codeUnits));
+    print(utf8.encode(encryptedText));
 
     sendMessage(
         callback: (reMsg) {
@@ -120,8 +136,8 @@ class EspService {
         aesKey: null,
         messageType: MsgType.UPDATE_KEY,
         messageId: msgIdByte,
-        pubkey: EMPTY_PUBKEY,
-        data: data);
+        pubkey: currentPubkey,
+        data: utf8.encode(encryptedText));
 
     return await completer.future.timeout(EspService.TIMEOUT);
   }
@@ -147,6 +163,28 @@ class EspService {
         pubkey: EMPTY_PUBKEY,
         iv: iv,
         data: data);
+
+    return completer.future.timeout(EspService.TIMEOUT);
+  }
+
+  Future<String?> getTempPubkey() async {
+    var msgIdByte = EspService.randomMessageId();
+    var completer = Completer<String?>();
+
+    sendMessage(
+        callback: (reMsg) {
+          if (reMsg.result == MsgResult.OK) {
+            var tempPubkey = bytesToHex(reMsg.encryptedData);
+            print("tempPubkey $tempPubkey");
+            completer.complete(tempPubkey);
+          } else {
+            completer.complete(null);
+          }
+        },
+        messageType: MsgType.GET_TEMP_PUBKEY,
+        messageId: msgIdByte,
+        pubkey: EspService.EMPTY_PUBKEY,
+        data: Uint8List.fromList([]));
 
     return completer.future.timeout(EspService.TIMEOUT);
   }
@@ -242,7 +280,6 @@ class EspService {
   void startListening() {
     _isReading = true;
     transport.listen((data) {
-      print(data);
       // 将新数据追加到缓冲区
       _receiveBuffer = Uint8List.fromList([..._receiveBuffer, ...data]);
       _processBuffer();
@@ -257,6 +294,9 @@ class EspService {
     while (true) {
       // 检查最小包头长度
       if (_receiveBuffer.length < PREFIX_LENGTH) return;
+
+      print("receive data");
+      print(_receiveBuffer);
 
       // 解析长度头（最后4字节的包头）
       final headerBytes =

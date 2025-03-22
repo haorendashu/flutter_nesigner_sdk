@@ -11,4 +11,5 @@ class MsgType {
   static const int ECHO = 11;
   static const int UPDATE_KEY = 12;
   static const int REMOVE_KEY = 13;
+  static const int GET_TEMP_PUBKEY = 14;
 }
