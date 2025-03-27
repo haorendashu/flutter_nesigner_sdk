@@ -20,6 +20,9 @@ dependencies:
   cryptography_flutter: ^2.3.2
   bip340: ^0.3.0
   string_validator: ^1.1.0
+  # libusb: 0.4.23-dev.1+1
+  libusb:
+    path: ../libusb_ffi/
 
 dev_dependencies:
   flutter_test:
@@ -27,6 +30,7 @@ dev_dependencies:
   flutter_lints: ^4.0.0
 
 dependency_overrides:
+  # ffi: ^2.1.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

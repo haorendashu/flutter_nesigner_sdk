@@ -19,6 +19,7 @@ class BaseSerialPort extends SerialPort {
 
   @override
   bool open() {
+    clearBuffer();
     return sp.open(mode: ls.SerialPortMode.readWrite);
   }
 
@@ -31,6 +32,7 @@ class BaseSerialPort extends SerialPort {
     }
     sp.close();
     sp.dispose();
+    clearBuffer();
     return true;
   }
 
@@ -71,10 +73,10 @@ class BaseSerialPort extends SerialPort {
   String? get macAddress => sp.macAddress;
 
   @override
-  StreamSubscription<Uint8List> listen(void Function(Uint8List event)? onData,
+  void receiveData(void Function(Uint8List event)? onData,
       {Function? onError, void Function()? onDone, bool? cancelOnError}) {
     _reader = ls.SerialPortReader(sp);
-    return _reader!.stream.listen(onData,
+    _reader!.stream.listen(onData,
         onError: onError, onDone: onDone, cancelOnError: cancelOnError);
   }
 

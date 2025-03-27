@@ -4,12 +4,13 @@ import 'dart:typed_data';
 import 'package:flutter/scheduler.dart';
 import 'package:libserialport/libserialport.dart' as ls;
 
+import '../transport/buffer_transport.dart';
 import '../transport/transport.dart';
 
 /// SerialPort
 ///
 /// libserialport doesn't support IOS. So wrap it and hope that someone can make an IOS one.
-abstract class SerialPort extends Transport {
+abstract class SerialPort extends BufferTransport {
   /// Gets the name of the port.
   ///
   /// The name returned is whatever is normally used to refer to a port on the

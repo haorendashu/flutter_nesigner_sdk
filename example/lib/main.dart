@@ -39,18 +39,19 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   Future<void> _incrementCounter() async {
-    var availablePorts = EspService.availablePorts;
-    for (var availablePort in availablePorts) {
-      print("availablePort $availablePort");
-    }
+    // var availablePorts = EspService.availablePorts;
+    // for (var availablePort in availablePorts) {
+    //   print("availablePort $availablePort");
+    // }
 
-    if (availablePorts.isEmpty) {
-      return;
-    }
+    // if (availablePorts.isEmpty) {
+    //   return;
+    // }
 
-    // SerialPort serialPort = BaseSerialPort(availablePorts.first);
-    SerialPort serialPort = BaseSerialPort("COM4");
-    var espService = EspService(serialPort);
+    // SerialPort serialPort = BaseSerialPort("COM4");
+
+    var usbTransport = UsbTransport();
+    var espService = EspService(usbTransport);
 
     espService.start();
     espService.startListening();
@@ -72,48 +73,48 @@ class _MyHomePageState extends State<MyHomePage> {
     //     Uint8List.fromList(HEX.decode(iv_hex)));
     // print(String.fromCharCodes(source));
 
-    // var result =
-    //     await espService.echo(aesKey, "Hello, this is a message from nesigner");
-    // print(result);
-
-    var result = await espService.updateKey(aesKey, testPrivateKey);
-    print("result $result");
-
-    // var espSigner = EspSigner(aesKey, espService);
-    // var pubkey = await espSigner.getPublicKey();
-    // print("pubkey $pubkey");
+    // var result = await espService.updateKey(aesKey, testPrivateKey);
+    // print("result $result");
 
     // var result = await espService.removeKey(aesKey);
     // print("result $result");
 
+    var result =
+        await espService.echo(aesKey, "Hello, this is a message from nesigner");
+    print("echo result $result");
+
+    var espSigner = EspSigner(aesKey, espService);
+    var pubkey = await espSigner.getPublicKey();
+    print("pubkey $pubkey");
+
     var theirPubkey =
         "1456e77bf02c6fe604879f61e6c7f772ceec3f9f0116aef3828377d447c5c291";
 
-    // var event = Map();
-    // event["created_at"] = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    // event["kind"] = 1;
-    // event["tags"] = [];
-    // event["content"] = "Hello nostr!";
-    // var eventResult = await espSigner.signEvent(event);
-    // print(eventResult);
+    var event = Map();
+    event["created_at"] = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    event["kind"] = 1;
+    event["tags"] = [];
+    event["content"] = "Hello nostr!";
+    var eventResult = await espSigner.signEvent(event);
+    print(eventResult);
 
-    // if (eventResult != null) {
-    //   var nip01Event = Nip01Event.fromJson(eventResult);
-    //   print("nip01Event.isIdValid ${nip01Event.isIdValid}");
-    // }
+    if (eventResult != null) {
+      var nip01Event = Nip01Event.fromJson(eventResult);
+      print("nip01Event.isIdValid ${nip01Event.isIdValid}");
+    }
 
-    // var TEST_TEXT = "Hello, Nostr! This is a test message.";
-    // var encryptedText = await espSigner.encrypt(theirPubkey, TEST_TEXT);
-    // print("encryptedText $encryptedText");
+    var TEST_TEXT = "Hello, Nostr! This is a test message.";
+    var encryptedText = await espSigner.encrypt(theirPubkey, TEST_TEXT);
+    print("encryptedText $encryptedText");
 
-    // var sourceText = await espSigner.decrypt(theirPubkey, encryptedText!);
-    // print("sourceText $sourceText");
+    var sourceText = await espSigner.decrypt(theirPubkey, encryptedText!);
+    print("sourceText $sourceText");
 
-    // encryptedText = await espSigner.nip44Encrypt(theirPubkey, TEST_TEXT);
-    // print("encryptedText $encryptedText");
+    encryptedText = await espSigner.nip44Encrypt(theirPubkey, TEST_TEXT);
+    print("encryptedText $encryptedText");
 
-    // sourceText = await espSigner.nip44Decrypt(theirPubkey, encryptedText!);
-    // print("sourceText $sourceText");
+    sourceText = await espSigner.nip44Decrypt(theirPubkey, encryptedText!);
+    print("sourceText $sourceText");
 
     // var messageId = espService.randomMessageId();
 

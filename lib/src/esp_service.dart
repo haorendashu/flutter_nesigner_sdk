@@ -38,8 +38,6 @@ class EspService {
 
   Transport transport;
 
-  Uint8List _receiveBuffer = Uint8List(0); // 接收缓冲区
-
   EspService(this.transport);
 
   static List<String> get availablePorts {
@@ -280,53 +278,17 @@ class EspService {
   void startListening() {
     _isReading = true;
     transport.listen((data) {
-      // 将新数据追加到缓冲区
-      _receiveBuffer = Uint8List.fromList([..._receiveBuffer, ...data]);
-      _processBuffer();
+      _parseSingleFrame(data);
     });
-  }
-
-  // 2+16+2+32+16+2+4=74
-  static int PREFIX_LENGTH = 74;
-
-  // 缓冲区分帧处理方法
-  void _processBuffer() {
-    while (true) {
-      // 检查最小包头长度
-      if (_receiveBuffer.length < PREFIX_LENGTH) return;
-
-      print("receive data");
-      print(_receiveBuffer);
-
-      // 解析长度头（最后4字节的包头）
-      final headerBytes =
-          _receiveBuffer.sublist(PREFIX_LENGTH - 4, PREFIX_LENGTH);
-      final totalLen =
-          ByteData.sublistView(headerBytes).getUint32(0, Endian.big);
-
-      print("receive head $totalLen");
-      print("receive fullLength ${_receiveBuffer.length}");
-      print("type ${twoBytesToInt(_receiveBuffer.sublist(0, 2))}");
-      print("id ${bytesToHex(_receiveBuffer.sublist(2, 18))}");
-
-      // 计算完整帧长度
-      final fullFrameLength = PREFIX_LENGTH + totalLen;
-
-      // 检查是否收到完整帧
-      if (_receiveBuffer.length < fullFrameLength) return;
-
-      // 提取完整帧数据
-      final frameData = _receiveBuffer.sublist(0, fullFrameLength);
-      _receiveBuffer = _receiveBuffer.sublist(fullFrameLength);
-
-      // 处理单个数据帧
-      _parseSingleFrame(frameData);
-    }
   }
 
   // 单帧解析方法
   void _parseSingleFrame(Uint8List data) {
     try {
+      if (data.length < transport.PREFIX_LENGTH) {
+        return;
+      }
+
       final message = ReceivedMessage(
         type: twoBytesToInt(data.sublist(0, 2)),
         id: data.sublist(2, 18),

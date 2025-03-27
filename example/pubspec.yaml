@@ -21,6 +21,7 @@ dev_dependencies:
 
 dependency_overrides:
   pointycastle: ^4.0.0
+  # ffi: ^2.1.4
 
 flutter:
   uses-material-design: true
