@@ -31,6 +31,9 @@ abstract class BufferTransport extends Transport {
           // 计算完整帧长度
           final fullFrameLength = PREFIX_LENGTH + totalLen;
 
+          print(
+              "buffer length ${_receiveBuffer.length} data length ${totalLen}");
+
           // 检查是否收到完整帧
           if (_receiveBuffer.length < fullFrameLength) return;
 

@@ -1,14 +1,14 @@
-import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
 import 'dart:typed_data';
 
-import 'package:flutter_nesigner_sdk/src/transport/transport.dart';
 import 'package:ffi/ffi.dart';
 import 'package:libusb/libusb64.dart';
 
-class UsbTransport extends Transport {
+import '../../flutter_nesigner_sdk.dart';
+
+class UsbTransport extends BufferTransport {
   static const int VID = 0x2323;
 
   static const int PID = 0x3434;
@@ -67,7 +67,7 @@ class UsbTransport extends Transport {
   bool _running = false;
 
   @override
-  void listen(void Function(Uint8List event) onData,
+  void receiveData(void Function(Uint8List event) onData,
       {Function? onError, void Function()? onDone, bool? cancelOnError}) {
     if (libusb != null && deviceHandlePtr != null) {
       _doListen(onData,
@@ -76,71 +76,38 @@ class UsbTransport extends Transport {
   }
 
   @override
-  void _doListen(void Function(Uint8List event) onData,
+  Future<void> _doListen(void Function(Uint8List event) onData,
       {Function? onError, void Function()? onDone, bool? cancelOnError}) async {
     var bufferLength = 1024 * 4;
     var buffer = calloc<UnsignedChar>(1024 * 4);
     var actualLength = calloc<Int>(8);
 
     for (; _running;) {
-      var readResult = libusb!.libusb_bulk_transfer(
-          deviceHandlePtr!, IN_ENDPOINT, buffer, bufferLength, actualLength, 0);
+      print("begin to receive data");
+      var readResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
+          IN_ENDPOINT, buffer, bufferLength, actualLength, 10);
       if (readResult == libusb_error.LIBUSB_SUCCESS) {
         // read success!
         var readedLength = actualLength.value;
-        if (readedLength > PREFIX_LENGTH) {
-          var data = convertPointerToUint8List(buffer, readedLength);
-          final headerBytes = data.sublist(PREFIX_LENGTH - 4, PREFIX_LENGTH);
-          final totalLen =
-              ByteData.sublistView(headerBytes).getUint32(0, Endian.big);
-          if (PREFIX_LENGTH + totalLen >= readedLength) {
-            onData(data);
-          }
-        }
+        var data = convertPointerToUint8List(buffer, readedLength);
+        onData(data);
+        // var readedLength = actualLength.value;
+        // if (readedLength > PREFIX_LENGTH) {
+        //   var data = convertPointerToUint8List(buffer, readedLength);
+        //   final headerBytes = data.sublist(PREFIX_LENGTH - 4, PREFIX_LENGTH);
+        //   final totalLen =
+        //       ByteData.sublistView(headerBytes).getUint32(0, Endian.big);
+        //   if (PREFIX_LENGTH + totalLen >= readedLength) {
+        //     onData(data);
+        //   }
+        // }
+      } else {
+        await Future.delayed(const Duration(milliseconds: 30));
       }
     }
 
     malloc.free(buffer);
     malloc.free(actualLength);
-  }
-
-  void listdevs(Pointer<Pointer<Pointer<libusb_device>>> deviceListPtr) {
-    var count = libusb!.libusb_get_device_list(nullptr, deviceListPtr);
-    if (count < 0) {
-      return;
-    }
-
-    var deviceList = deviceListPtr.value;
-    printDevs(deviceList);
-    libusb!.libusb_free_device_list(deviceList, 1);
-  }
-
-  void printDevs(Pointer<Pointer<libusb_device>> deviceList) {
-    var descPtr = calloc<libusb_device_descriptor>();
-    var path = calloc<Uint8>(8);
-
-    for (var i = 0; deviceList[i] != nullptr; i++) {
-      var dev = deviceList[i];
-      var result = libusb!.libusb_get_device_descriptor(dev, descPtr);
-      if (result < 0) continue;
-
-      var desc = descPtr.ref;
-      var idVendor = desc.idVendor.toRadixString(16).padLeft(4, '0');
-      var idProduct = desc.idProduct.toRadixString(16).padLeft(4, '0');
-      var bus = libusb!.libusb_get_bus_number(dev).toRadixString(16);
-      var addr = libusb!.libusb_get_device_address(dev).toRadixString(16);
-      print(
-          '$idVendor:$idProduct (bus $bus, device $addr) vid:${desc.idVendor} pid:${desc.idProduct}');
-
-      var portCount = libusb!.libusb_get_port_numbers(dev, path, 8);
-      // if (portCount > 0) {
-      //   var hexList = path.asTypedList(portCount).map((e) => hex.encode([e]));
-      //   print(' path: ${hexList.join('.')}');
-      // }
-    }
-
-    calloc.free(descPtr);
-    calloc.free(path);
   }
 
   @override
@@ -152,7 +119,6 @@ class UsbTransport extends Transport {
     }
 
     var deviceListPtr = calloc<Pointer<Pointer<libusb_device>>>();
-    listdevs(deviceListPtr);
     calloc.free(deviceListPtr);
 
     deviceHandlePtr =
@@ -168,6 +134,8 @@ class UsbTransport extends Transport {
       print("libusb_claim_interface error $result");
       return false;
     }
+
+    _running = true;
 
     return true;
   }
