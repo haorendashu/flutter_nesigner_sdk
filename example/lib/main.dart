@@ -50,10 +50,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // SerialPort serialPort = BaseSerialPort("COM4");
 
-    var usbTransport = UsbTransport();
+    // var usbTransport = UsbTransport();
+    var usbTransport = UsbIsolateTransport();
     var espService = EspService(usbTransport);
 
-    espService.start();
+    await espService.start();
+    await Future.delayed(const Duration(minutes: 1));
     espService.startListening();
 
     String pin = "12345678";
