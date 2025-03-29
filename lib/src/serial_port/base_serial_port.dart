@@ -18,13 +18,13 @@ class BaseSerialPort extends SerialPort {
   }
 
   @override
-  bool open() {
+  Future<bool> open() async {
     clearBuffer();
     return sp.open(mode: ls.SerialPortMode.readWrite);
   }
 
   @override
-  bool close() {
+  Future<bool> close() async {
     if (_reader != null) {
       try {
         _reader!.close();

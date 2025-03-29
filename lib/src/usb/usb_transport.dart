@@ -21,7 +21,7 @@ class UsbTransport extends BufferTransport {
 
   static const int IN_ENDPOINT = 130;
 
-  DynamicLibrary loadLibrary() {
+  static DynamicLibrary loadLibrary() {
     if (Platform.isWindows) {
       return DynamicLibrary.open(
           '${Directory.current.path}/libusb-1.0/libusb-1.0.dll');
@@ -41,7 +41,7 @@ class UsbTransport extends BufferTransport {
   Pointer<libusb_device_handle>? deviceHandlePtr;
 
   @override
-  bool close() {
+  Future<bool> close() async {
     if (libusb != null && deviceHandlePtr != null) {
       libusb!.libusb_release_interface(deviceHandlePtr!, INTERFACE_NUM);
       libusb!.libusb_close(deviceHandlePtr!);
@@ -111,7 +111,7 @@ class UsbTransport extends BufferTransport {
   }
 
   @override
-  bool open() {
+  Future<bool> open() async {
     libusb = Libusb(loadLibrary());
     var initResult = libusb!.libusb_init(nullptr);
     if (initResult < 0) {
@@ -155,7 +155,7 @@ class UsbTransport extends BufferTransport {
   }
 
   // 将 Uint8List 转换为 Pointer<UnsignedChar>
-  Pointer<UnsignedChar> convertUint8ListToPointer(Uint8List data) {
+  static Pointer<UnsignedChar> convertUint8ListToPointer(Uint8List data) {
     // 分配内存
     final ptr = malloc<UnsignedChar>(data.length);
     // 转换为 Uint8 的指针视图
@@ -166,7 +166,8 @@ class UsbTransport extends BufferTransport {
   }
 
   // 假设 data 是 ffi.Pointer<pkg_ffi.UnsignedChar>，length 是数据长度
-  Uint8List convertPointerToUint8List(Pointer<UnsignedChar> data, int length) {
+  static Uint8List convertPointerToUint8List(
+      Pointer<UnsignedChar> data, int length) {
     // 将指针转换为 Uint8 类型的指针
     final pointerUint8 = data.cast<Uint8>();
     // 创建 Uint8List 视图

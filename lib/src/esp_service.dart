@@ -189,8 +189,8 @@ class EspService {
 
   Timer? _timer;
 
-  void start() {
-    _openAndCheck();
+  Future<void> start() async {
+    await _openAndCheck();
   }
 
   void stop() {
@@ -204,20 +204,20 @@ class EspService {
   }
 
   Future<void> _openAndCheck() async {
-    _doOpen();
+    await _doOpen();
 
-    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 30), (timer) async {
       try {
-        _doOpen();
+        await _doOpen();
       } catch (e) {
         print(e);
       }
     });
   }
 
-  void _doOpen() {
+  Future<void> _doOpen() async {
     if (!transport.isOpen) {
-      transport.open();
+      await transport.open();
     }
   }
 
@@ -285,7 +285,7 @@ class EspService {
   // 单帧解析方法
   void _parseSingleFrame(Uint8List data) {
     try {
-      if (data.length < transport.PREFIX_LENGTH) {
+      if (data.length < Transport.PREFIX_LENGTH) {
         return;
       }
 

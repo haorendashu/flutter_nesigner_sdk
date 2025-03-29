@@ -6,6 +6,8 @@ export 'src/serial_port/enums.dart';
 export 'src/serial_port/serial_port.dart';
 export 'src/transport/buffer_transport.dart';
 export 'src/transport/transport.dart';
+export 'src/usb/usb_isolate_transport_worker.dart';
+export 'src/usb/usb_isolate_transport.dart';
 export 'src/usb/usb_transport.dart';
 export 'src/utils/crc_util.dart';
 export 'src/utils/crypto_util.dart';

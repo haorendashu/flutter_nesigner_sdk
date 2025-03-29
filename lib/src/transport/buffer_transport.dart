@@ -17,19 +17,19 @@ abstract class BufferTransport extends Transport {
 
         while (true) {
           // 检查最小包头长度
-          if (_receiveBuffer.length < PREFIX_LENGTH) return;
+          if (_receiveBuffer.length < Transport.PREFIX_LENGTH) return;
 
           print("receive data");
           print(_receiveBuffer);
 
           // 解析长度头（最后4字节的包头）
-          final headerBytes =
-              _receiveBuffer.sublist(PREFIX_LENGTH - 4, PREFIX_LENGTH);
+          final headerBytes = _receiveBuffer.sublist(
+              Transport.PREFIX_LENGTH - 4, Transport.PREFIX_LENGTH);
           final totalLen =
               ByteData.sublistView(headerBytes).getUint32(0, Endian.big);
 
           // 计算完整帧长度
-          final fullFrameLength = PREFIX_LENGTH + totalLen;
+          final fullFrameLength = Transport.PREFIX_LENGTH + totalLen;
 
           print(
               "buffer length ${_receiveBuffer.length} data length ${totalLen}");

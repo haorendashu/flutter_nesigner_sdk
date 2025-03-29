@@ -3,13 +3,13 @@ import 'dart:typed_data';
 
 abstract class Transport {
   // 2+16+2+32+16+2+4=74
-  int PREFIX_LENGTH = 74;
+  static int PREFIX_LENGTH = 74;
 
   /// Opens the serial port.
-  bool open();
+  Future<bool> open();
 
   /// Closes the serial port.
-  bool close();
+  Future<bool> close();
 
   /// Gets whether the serial port is open.
   bool get isOpen;
