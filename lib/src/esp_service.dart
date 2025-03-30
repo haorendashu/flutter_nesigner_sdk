@@ -108,10 +108,8 @@ class EspService {
     var msgIdByte = randomMessageId();
     var completer = Completer<int?>();
 
-    final sourceData = Uint8List.fromList([
-      ...hexToBytes(key),
-      ...aesKey,
-    ]);
+    final sourceData = key + bytesToHex(aesKey);
+    print(sourceData);
 
     var signerTempPubkey = await getTempPubkey();
     if (signerTempPubkey == null) {
@@ -121,8 +119,7 @@ class EspService {
     var currentPubkey = getPublicKey(key);
 
     var conversationKey = NIP44V2.shareSecret(key, signerTempPubkey);
-    var encryptedText = await NIP44V2.encrypt(
-        String.fromCharCodes(sourceData), conversationKey);
+    var encryptedText = await NIP44V2.encrypt(sourceData, conversationKey);
     print("encryptedText $encryptedText");
     print(Uint8List.fromList(encryptedText.codeUnits));
     print(utf8.encode(encryptedText));
