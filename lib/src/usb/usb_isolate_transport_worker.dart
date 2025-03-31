@@ -100,7 +100,7 @@ class UsbIsolateTransportWorker {
     var actualLength = calloc<Int>(8);
 
     while (true) {
-      print("begin to receive data");
+      // print("begin to receive data");
       var readResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
           config.inEndPoint, buffer, bufferLength, actualLength, 1000);
       if (readResult == libusb_error.LIBUSB_SUCCESS) {
@@ -111,8 +111,8 @@ class UsbIsolateTransportWorker {
         _receiveBuffer = Uint8List.fromList([..._receiveBuffer, ...data]);
         if (_receiveBuffer.length < Transport.PREFIX_LENGTH) continue;
 
-        print("receive data");
-        print(_receiveBuffer);
+        // print("receive data");
+        // print(_receiveBuffer);
 
         // 解析长度头（最后4字节的包头）
         final headerBytes = _receiveBuffer.sublist(
@@ -123,7 +123,7 @@ class UsbIsolateTransportWorker {
         // 计算完整帧长度
         final fullFrameLength = Transport.PREFIX_LENGTH + totalLen;
 
-        print("buffer length ${_receiveBuffer.length} data length ${totalLen}");
+        // print("buffer length ${_receiveBuffer.length} data length ${totalLen}");
 
         // 检查是否收到完整帧
         if (_receiveBuffer.length < fullFrameLength) continue;

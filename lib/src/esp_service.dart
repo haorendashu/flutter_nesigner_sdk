@@ -109,7 +109,7 @@ class EspService {
     var completer = Completer<int?>();
 
     final sourceData = key + bytesToHex(aesKey);
-    print(sourceData);
+    // print(sourceData);
 
     var signerTempPubkey = await getTempPubkey();
     if (signerTempPubkey == null) {
@@ -120,9 +120,9 @@ class EspService {
 
     var conversationKey = NIP44V2.shareSecret(key, signerTempPubkey);
     var encryptedText = await NIP44V2.encrypt(sourceData, conversationKey);
-    print("encryptedText $encryptedText");
-    print(Uint8List.fromList(encryptedText.codeUnits));
-    print(utf8.encode(encryptedText));
+    // print("encryptedText $encryptedText");
+    // print(Uint8List.fromList(encryptedText.codeUnits));
+    // print(utf8.encode(encryptedText));
 
     sendMessage(
         callback: (reMsg) {
@@ -170,7 +170,7 @@ class EspService {
         callback: (reMsg) {
           if (reMsg.result == MsgResult.OK) {
             var tempPubkey = bytesToHex(reMsg.encryptedData);
-            print("tempPubkey $tempPubkey");
+            // print("tempPubkey $tempPubkey");
             completer.complete(tempPubkey);
           } else {
             completer.complete(null);
@@ -246,14 +246,14 @@ class EspService {
 
     if (aesKey != null) {
       data = aesEncrypt(aesKey, data, iv);
-      print("data encrypted length ${data.length}");
-      print(data);
+      // print("data encrypted length ${data.length}");
+      // print(data);
     }
     int dataLength = data.length;
     final header = _buildHeader(dataLength);
     final crc = CRCUtil.crc16Calculate(data);
 
-    print("send head ${data.length}");
+    // print("send head ${data.length}");
 
     final output = Uint8List.fromList([
       ...intToTwoBytes(messageType),
@@ -265,8 +265,8 @@ class EspService {
       ...data,
     ]);
 
-    print("send fullLength ${output.length}");
-    print(output);
+    // print("send fullLength ${output.length}");
+    // print(output);
 
     transport.write(output);
   }

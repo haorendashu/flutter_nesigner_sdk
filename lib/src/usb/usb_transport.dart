@@ -83,7 +83,7 @@ class UsbTransport extends BufferTransport {
     var actualLength = calloc<Int>(8);
 
     for (; _running;) {
-      print("begin to receive data");
+      // print("begin to receive data");
       var readResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
           IN_ENDPOINT, buffer, bufferLength, actualLength, 10);
       if (readResult == libusb_error.LIBUSB_SUCCESS) {
