@@ -52,6 +52,9 @@ abstract class BufferTransport extends Transport {
   }
 
   void clearBuffer() {
+    if (_receiveBuffer.isEmpty) {
+      return;
+    }
     _receiveBuffer.clear();
   }
 }

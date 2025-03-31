@@ -39,23 +39,24 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   Future<void> _incrementCounter() async {
-    // var availablePorts = EspService.availablePorts;
-    // for (var availablePort in availablePorts) {
-    //   print("availablePort $availablePort");
-    // }
+    var availablePorts = EspService.availablePorts;
+    for (var availablePort in availablePorts) {
+      print("availablePort $availablePort");
+    }
 
-    // if (availablePorts.isEmpty) {
-    //   return;
-    // }
+    if (availablePorts.isEmpty) {
+      return;
+    }
 
-    // SerialPort serialPort = BaseSerialPort("COM4");
+    SerialPort serialPort = BaseSerialPort("COM4");
+    var espService = EspService(serialPort);
 
     // var usbTransport = UsbTransport();
-    var usbTransport = UsbIsolateTransport();
-    var espService = EspService(usbTransport);
+    // var usbTransport = UsbIsolateTransport();
+    // var espService = EspService(usbTransport);
 
     await espService.start();
-    await Future.delayed(const Duration(seconds: 10));
+    // await Future.delayed(const Duration(seconds: 10));
     espService.startListening();
 
     String pin = "12345678";
