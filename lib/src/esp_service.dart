@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -8,9 +7,6 @@ import 'package:flutter_nesigner_sdk/src/consts/msg_result.dart';
 import 'package:flutter_nesigner_sdk/src/esp_callback.dart';
 import 'package:flutter_nesigner_sdk/src/nostr_util/keys.dart';
 import 'package:flutter_nesigner_sdk/src/nostr_util/nip44_v2.dart';
-import 'package:flutter_nesigner_sdk/src/serial_port/serial_port.dart';
-import 'package:flutter_nesigner_sdk/src/transport/transport.dart';
-import 'package:libserialport/libserialport.dart' as ls;
 // import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:pointycastle/export.dart';
 
@@ -39,14 +35,6 @@ class EspService {
   Transport transport;
 
   EspService(this.transport);
-
-  static List<String> get availablePorts {
-    if (Platform.isIOS) {
-      return [];
-    }
-
-    return ls.SerialPort.availablePorts;
-  }
 
   Map<String, EspCallback> _callbacks = {};
 

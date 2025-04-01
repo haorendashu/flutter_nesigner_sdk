@@ -70,10 +70,12 @@ class UsbIsolateTransportWorker {
       return;
     }
 
-    ReceivePort workerReceivePort = ReceivePort();
+    ReceivePort workerReceivePort = ReceivePort("UsbIsolateTransportWorker");
     config.sendPort.send(workerReceivePort.sendPort);
 
     workerReceivePort.listen(workerReceiveMessage);
+
+    config.sendPort.send([UsbIsolateTransportAction.OPEN_SUCCESS]);
   }
 
   void workerReceiveMessage(message) {

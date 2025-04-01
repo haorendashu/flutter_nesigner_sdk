@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:isolate';
 import 'dart:typed_data';
 
@@ -33,6 +34,8 @@ class UsbIsolateTransport extends Transport {
     _onData = onData;
   }
 
+  Completer<bool>? _openComplete;
+
   @override
   Future<bool> open() async {
     receivePort = ReceivePort("UsbIsolateTransport");
@@ -42,6 +45,17 @@ class UsbIsolateTransport extends Transport {
       } else if (data is Uint8List) {
         if (_onData != null) {
           _onData!(data);
+        }
+      } else if (data is List && data.isNotEmpty && data[0] is String) {
+        var action = data[0];
+        if (_openComplete != null) {
+          if (action == UsbIsolateTransportAction.OPEN_SUCCESS) {
+            _openComplete!.complete(true);
+            _openComplete = null;
+          } else if (action == UsbIsolateTransportAction.OPEN_FAIL) {
+            _openComplete!.complete(false);
+            _openComplete = null;
+          }
         }
       }
     });
@@ -62,7 +76,9 @@ class UsbIsolateTransport extends Transport {
       ),
     );
 
-    return true;
+    _openComplete = Completer<bool>();
+
+    return _openComplete!.future.timeout(const Duration(seconds: 10));
   }
 
   @override
@@ -74,4 +90,9 @@ class UsbIsolateTransport extends Transport {
 
     return 0;
   }
+}
+
+class UsbIsolateTransportAction {
+  static const OPEN_SUCCESS = "openSuccess";
+  static const OPEN_FAIL = "openFail";
 }

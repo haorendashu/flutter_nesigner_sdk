@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'dart:typed_data';
 
@@ -6,6 +7,14 @@ import 'serial_port.dart';
 import 'package:libserialport/libserialport.dart' as ls;
 
 class BaseSerialPort extends SerialPort {
+  static List<String> get availablePorts {
+    if (Platform.isIOS) {
+      return [];
+    }
+
+    return ls.SerialPort.availablePorts;
+  }
+
   late ls.SerialPort sp;
 
   BaseSerialPort(String name) {

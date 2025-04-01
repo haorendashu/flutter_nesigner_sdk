@@ -56,7 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var espService = EspService(usbTransport);
 
     await espService.start();
-    await Future.delayed(const Duration(seconds: 10));
+    // await Future.delayed(const Duration(seconds: 10));
     espService.startListening();
 
     String pin = "12345678";

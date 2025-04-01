@@ -8,7 +8,8 @@ import 'package:libusb/libusb64.dart';
 
 import '../../flutter_nesigner_sdk.dart';
 
-class UsbTransport extends BufferTransport {
+// class UsbTransport extends BufferTransport {
+class UsbTransport {
   static const int VID = 0x2323;
 
   static const int PID = 0x3434;
@@ -49,123 +50,123 @@ class UsbTransport extends BufferTransport {
     throw UnsupportedError("Unsupported platform");
   }
 
-  Libusb? libusb;
+  // Libusb? libusb;
 
-  Pointer<libusb_device_handle>? deviceHandlePtr;
+  // Pointer<libusb_device_handle>? deviceHandlePtr;
 
-  @override
-  Future<bool> close() async {
-    if (libusb != null && deviceHandlePtr != null) {
-      libusb!.libusb_release_interface(deviceHandlePtr!, INTERFACE_NUM);
-      libusb!.libusb_close(deviceHandlePtr!);
+  // @override
+  // Future<bool> close() async {
+  //   if (libusb != null && deviceHandlePtr != null) {
+  //     libusb!.libusb_release_interface(deviceHandlePtr!, INTERFACE_NUM);
+  //     libusb!.libusb_close(deviceHandlePtr!);
 
-      libusb = null;
-      deviceHandlePtr = null;
-      _running = false;
+  //     libusb = null;
+  //     deviceHandlePtr = null;
+  //     _running = false;
 
-      return true;
-    }
+  //     return true;
+  //   }
 
-    return false;
-  }
+  //   return false;
+  // }
 
-  @override
-  bool get isOpen {
-    if (libusb != null && deviceHandlePtr != null) {
-      return true;
-    }
-    return false;
-  }
+  // @override
+  // bool get isOpen {
+  //   if (libusb != null && deviceHandlePtr != null) {
+  //     return true;
+  //   }
+  //   return false;
+  // }
 
-  bool _running = false;
+  // bool _running = false;
 
-  @override
-  void receiveData(void Function(Uint8List event) onData,
-      {Function? onError, void Function()? onDone, bool? cancelOnError}) {
-    if (libusb != null && deviceHandlePtr != null) {
-      _doListen(onData,
-          onError: onError, onDone: onDone, cancelOnError: cancelOnError);
-    }
-  }
+  // @override
+  // void receiveData(void Function(Uint8List event) onData,
+  //     {Function? onError, void Function()? onDone, bool? cancelOnError}) {
+  //   if (libusb != null && deviceHandlePtr != null) {
+  //     _doListen(onData,
+  //         onError: onError, onDone: onDone, cancelOnError: cancelOnError);
+  //   }
+  // }
 
-  @override
-  Future<void> _doListen(void Function(Uint8List event) onData,
-      {Function? onError, void Function()? onDone, bool? cancelOnError}) async {
-    var bufferLength = 1024 * 4;
-    var buffer = calloc<UnsignedChar>(1024 * 4);
-    var actualLength = calloc<Int>(8);
+  // @override
+  // Future<void> _doListen(void Function(Uint8List event) onData,
+  //     {Function? onError, void Function()? onDone, bool? cancelOnError}) async {
+  //   var bufferLength = 1024 * 4;
+  //   var buffer = calloc<UnsignedChar>(1024 * 4);
+  //   var actualLength = calloc<Int>(8);
 
-    for (; _running;) {
-      // print("begin to receive data");
-      var readResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
-          IN_ENDPOINT, buffer, bufferLength, actualLength, 10);
-      if (readResult == libusb_error.LIBUSB_SUCCESS) {
-        // read success!
-        var readedLength = actualLength.value;
-        var data = convertPointerToUint8List(buffer, readedLength);
-        onData(data);
-        // var readedLength = actualLength.value;
-        // if (readedLength > PREFIX_LENGTH) {
-        //   var data = convertPointerToUint8List(buffer, readedLength);
-        //   final headerBytes = data.sublist(PREFIX_LENGTH - 4, PREFIX_LENGTH);
-        //   final totalLen =
-        //       ByteData.sublistView(headerBytes).getUint32(0, Endian.big);
-        //   if (PREFIX_LENGTH + totalLen >= readedLength) {
-        //     onData(data);
-        //   }
-        // }
-      } else {
-        await Future.delayed(const Duration(milliseconds: 30));
-      }
-    }
+  //   for (; _running;) {
+  //     // print("begin to receive data");
+  //     var readResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
+  //         IN_ENDPOINT, buffer, bufferLength, actualLength, 10);
+  //     if (readResult == libusb_error.LIBUSB_SUCCESS) {
+  //       // read success!
+  //       var readedLength = actualLength.value;
+  //       var data = convertPointerToUint8List(buffer, readedLength);
+  //       onData(data);
+  //       // var readedLength = actualLength.value;
+  //       // if (readedLength > PREFIX_LENGTH) {
+  //       //   var data = convertPointerToUint8List(buffer, readedLength);
+  //       //   final headerBytes = data.sublist(PREFIX_LENGTH - 4, PREFIX_LENGTH);
+  //       //   final totalLen =
+  //       //       ByteData.sublistView(headerBytes).getUint32(0, Endian.big);
+  //       //   if (PREFIX_LENGTH + totalLen >= readedLength) {
+  //       //     onData(data);
+  //       //   }
+  //       // }
+  //     } else {
+  //       await Future.delayed(const Duration(milliseconds: 30));
+  //     }
+  //   }
 
-    malloc.free(buffer);
-    malloc.free(actualLength);
-  }
+  //   malloc.free(buffer);
+  //   malloc.free(actualLength);
+  // }
 
-  @override
-  Future<bool> open() async {
-    libusb = Libusb(loadLibrary());
-    var initResult = libusb!.libusb_init(nullptr);
-    if (initResult < 0) {
-      return false;
-    }
+  // @override
+  // Future<bool> open() async {
+  //   libusb = Libusb(loadLibrary());
+  //   var initResult = libusb!.libusb_init(nullptr);
+  //   if (initResult < 0) {
+  //     return false;
+  //   }
 
-    var deviceListPtr = calloc<Pointer<Pointer<libusb_device>>>();
-    calloc.free(deviceListPtr);
+  //   var deviceListPtr = calloc<Pointer<Pointer<libusb_device>>>();
+  //   calloc.free(deviceListPtr);
 
-    deviceHandlePtr =
-        libusb!.libusb_open_device_with_vid_pid(nullptr, VID, PID);
-    if (deviceHandlePtr!.address <= 0) {
-      print("libusb_open_device_with_vid_pid fail");
-      return false;
-    }
+  //   deviceHandlePtr =
+  //       libusb!.libusb_open_device_with_vid_pid(nullptr, VID, PID);
+  //   if (deviceHandlePtr!.address <= 0) {
+  //     print("libusb_open_device_with_vid_pid fail");
+  //     return false;
+  //   }
 
-    var result =
-        libusb!.libusb_claim_interface(deviceHandlePtr!, INTERFACE_NUM);
-    if (result != libusb_error.LIBUSB_SUCCESS) {
-      print("libusb_claim_interface error $result");
-      return false;
-    }
+  //   var result =
+  //       libusb!.libusb_claim_interface(deviceHandlePtr!, INTERFACE_NUM);
+  //   if (result != libusb_error.LIBUSB_SUCCESS) {
+  //     print("libusb_claim_interface error $result");
+  //     return false;
+  //   }
 
-    _running = true;
+  //   _running = true;
 
-    return true;
-  }
+  //   return true;
+  // }
 
-  @override
-  int write(Uint8List bytes) {
-    if (libusb != null && deviceHandlePtr != null) {
-      var data = convertUint8ListToPointer(bytes);
-      var actualLength = calloc<Int>(8);
-      var sendResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
-          OUT_ENDPOINT, data, bytes.length, actualLength, 1000);
-      print("sendResult $sendResult");
-      return actualLength.value;
-    }
+  // @override
+  // int write(Uint8List bytes) {
+  //   if (libusb != null && deviceHandlePtr != null) {
+  //     var data = convertUint8ListToPointer(bytes);
+  //     var actualLength = calloc<Int>(8);
+  //     var sendResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
+  //         OUT_ENDPOINT, data, bytes.length, actualLength, 1000);
+  //     print("sendResult $sendResult");
+  //     return actualLength.value;
+  //   }
 
-    return 0;
-  }
+  //   return 0;
+  // }
 
   // 将 Uint8List 转换为 Pointer<UnsignedChar>
   static Pointer<UnsignedChar> convertUint8ListToPointer(Uint8List data) {
