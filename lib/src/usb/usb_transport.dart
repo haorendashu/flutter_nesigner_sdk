@@ -22,12 +22,32 @@ class UsbTransport {
 
   static const int IN_ENDPOINT = 130;
 
+  static String? _libPath;
+
+  static bool? _macosArchIsArm;
+
+  static void setLibrary(String libPath) {
+    _libPath = libPath;
+  }
+
+  static void setMacOSArchIsArm(bool isArm) {
+    _macosArchIsArm = isArm;
+  }
+
   static DynamicLibrary loadLibrary() {
+    if (_libPath != null) {
+      return DynamicLibrary.open(_libPath!);
+    }
+
     if (Platform.isWindows) {
       return DynamicLibrary.open(
           '${Directory.current.path}/libusb-1.0/libusb-1.0.dll');
     }
     if (Platform.isMacOS) {
+      if (_macosArchIsArm != null && !_macosArchIsArm!) {
+        var filePath = _getMacOSLibraryPath("libusb-1.0.dll");
+        return DynamicLibrary.open(filePath);
+      }
       var filePath = _getMacOSLibraryPath("libusb-1.0_arm64.dylib");
       return DynamicLibrary.open(filePath);
     } else if (Platform.isLinux) {
@@ -41,13 +61,50 @@ class UsbTransport {
     if (Platform.isMacOS) {
       // 获取应用 Frameworks 目录路径
       final executablePath = Platform.resolvedExecutable;
-      print("current path $executablePath");
       var paths = executablePath.split("/");
       paths = [...paths.sublist(0, paths.length - 2), "Frameworks"];
-      print("current path2 ${paths.join("/")}");
       return "${paths.join("/")}/$name";
     }
     throw UnsupportedError("Unsupported platform");
+  }
+
+  static bool existNesigner() {
+    try {
+      var libusb = Libusb(UsbTransport.loadLibrary());
+      var initResult = libusb.libusb_init(nullptr);
+      if (initResult < 0) {
+        return false;
+      }
+
+      var deviceListPtr = calloc<Pointer<Pointer<libusb_device>>>();
+      var count = libusb.libusb_get_device_list(nullptr, deviceListPtr);
+      if (count < 0) {
+        calloc.free(deviceListPtr);
+        return false;
+      }
+
+      var descPtr = calloc<libusb_device_descriptor>();
+      var deviceList = deviceListPtr.value;
+      for (var i = 0; deviceList[i] != nullptr; i++) {
+        var dev = deviceList[i];
+        var result = libusb.libusb_get_device_descriptor(dev, descPtr);
+        if (result < 0) continue;
+
+        var desc = descPtr.ref;
+        if (desc.idVendor == VID && desc.idProduct == PID) {
+          calloc.free(deviceListPtr);
+          calloc.free(descPtr);
+          return true;
+        }
+      }
+
+      calloc.free(deviceListPtr);
+      calloc.free(descPtr);
+      return false;
+    } catch (e) {
+      print("existNesigner exception! $e");
+    }
+    return false;
   }
 
   // Libusb? libusb;
