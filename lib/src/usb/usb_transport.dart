@@ -27,13 +27,26 @@ class UsbTransport extends BufferTransport {
           '${Directory.current.path}/libusb-1.0/libusb-1.0.dll');
     }
     if (Platform.isMacOS) {
-      return DynamicLibrary.open(
-          '${Directory.current.path}/libusb-1.0/libusb-1.0.dylib');
+      var filePath = _getMacOSLibraryPath("libusb-1.0_arm64.dylib");
+      return DynamicLibrary.open(filePath);
     } else if (Platform.isLinux) {
       return DynamicLibrary.open(
           '${Directory.current.path}/libusb-1.0/libusb-1.0.so');
     }
     throw 'libusb dynamic library not found';
+  }
+
+  static String _getMacOSLibraryPath(String name) {
+    if (Platform.isMacOS) {
+      // 获取应用 Frameworks 目录路径
+      final executablePath = Platform.resolvedExecutable;
+      print("current path $executablePath");
+      var paths = executablePath.split("/");
+      paths = [...paths.sublist(0, paths.length - 2), "Frameworks"];
+      print("current path2 ${paths.join("/")}");
+      return "${paths.join("/")}/$name";
+    }
+    throw UnsupportedError("Unsupported platform");
   }
 
   Libusb? libusb;
