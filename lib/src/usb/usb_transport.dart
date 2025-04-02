@@ -40,8 +40,10 @@ class UsbTransport {
     }
 
     if (Platform.isWindows) {
-      return DynamicLibrary.open(
-          '${Directory.current.path}/libusb-1.0/libusb-1.0.dll');
+      final executablePath = Platform.resolvedExecutable;
+      var paths = executablePath.split("\\");
+      var currentPath = [...paths.sublist(0, paths.length - 1)].join("\\");
+      return DynamicLibrary.open('$currentPath/libusb-1.0.dll');
     }
     if (Platform.isMacOS) {
       if (_macosArchIsArm != null && !_macosArchIsArm!) {
@@ -51,8 +53,10 @@ class UsbTransport {
       var filePath = _getMacOSLibraryPath("libusb-1.0_arm64.dylib");
       return DynamicLibrary.open(filePath);
     } else if (Platform.isLinux) {
-      return DynamicLibrary.open(
-          '${Directory.current.path}/libusb-1.0/libusb-1.0.so');
+      final executablePath = Platform.resolvedExecutable;
+      var paths = executablePath.split("/");
+      var currentPath = [...paths.sublist(0, paths.length - 1)].join("/");
+      return DynamicLibrary.open('$currentPath/libusb-1.0.so');
     }
     throw 'libusb dynamic library not found';
   }
