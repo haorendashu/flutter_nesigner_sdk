@@ -96,6 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     var event = Map<String, dynamic>();
     event["created_at"] = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    // event["created_at"] = 1743790056;
     event["kind"] = 1;
     event["tags"] = [];
     event["content"] = "Hello nostr!";
@@ -106,6 +107,12 @@ class _MyHomePageState extends State<MyHomePage> {
       var nip01Event = Nip01Event.fromJson(eventResult);
       print("nip01Event.isIdValid ${nip01Event.isIdValid}");
       var validSig =
+          Bip340.verify(nip01Event.id, nip01Event.sig, nip01Event.pubKey);
+      print("nip01Event.isValidSign $validSig");
+
+      nip01Event.sign(testPrivateKey);
+      print(nip01Event.toJson());
+      validSig =
           Bip340.verify(nip01Event.id, nip01Event.sig, nip01Event.pubKey);
       print("nip01Event.isValidSign $validSig");
     }
