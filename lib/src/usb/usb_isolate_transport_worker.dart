@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:isolate';
 import 'dart:typed_data';
@@ -6,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
 import 'package:libusb/libusb64.dart';
 import 'package:ffi/ffi.dart';
+import 'package:async/async.dart';
 
 class UsbIsolateTransportWorkerConfig {
   RootIsolateToken rootIsolateToken;
@@ -42,6 +44,9 @@ class UsbIsolateTransportWorker {
 
   Pointer<libusb_device_handle>? deviceHandlePtr;
 
+  StreamController<Uint8List>? streamController;
+  StreamQueue<Uint8List>? queue;
+
   void run() {
     BackgroundIsolateBinaryMessenger.ensureInitialized(config.rootIsolateToken);
 
@@ -73,12 +78,31 @@ class UsbIsolateTransportWorker {
     ReceivePort workerReceivePort = ReceivePort("UsbIsolateTransportWorker");
     config.sendPort.send(workerReceivePort.sendPort);
 
+    streamController = StreamController<Uint8List>();
+    queue = StreamQueue<Uint8List>(streamController!.stream);
+    waitForMessage();
+
     workerReceivePort.listen(workerReceiveMessage);
 
     config.sendPort.send([UsbIsolateTransportAction.OPEN_SUCCESS]);
   }
 
+  void waitForMessage() async {
+    while (true) {
+      var message = await queue!.next;
+      handleMessage(message);
+    }
+  }
+
   void workerReceiveMessage(message) {
+    if (message is Uint8List) {
+      if (streamController != null) {
+        streamController!.add(message);
+      }
+    }
+  }
+
+  void handleMessage(message) {
     if (message is Uint8List) {
       // send
       var data = UsbTransport.convertUint8ListToPointer(message);
@@ -104,7 +128,7 @@ class UsbIsolateTransportWorker {
     while (true) {
       // print("begin to receive data");
       var readResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
-          config.inEndPoint, buffer, bufferLength, actualLength, 1000);
+          config.inEndPoint, buffer, bufferLength, actualLength, 30000);
       if (readResult == libusb_error.LIBUSB_SUCCESS) {
         // read success!
         var readedLength = actualLength.value;
@@ -135,6 +159,11 @@ class UsbIsolateTransportWorker {
         _receiveBuffer = _receiveBuffer.sublist(fullFrameLength);
 
         config.sendPort.send(frameData);
+        break;
+      } else {
+        // read fail! The call will be timeout by himself.
+        print("read fail!");
+        _receiveBuffer = Uint8List(0);
         break;
       }
     }

@@ -286,8 +286,6 @@ class EspService {
         encryptedData: data.sublist(74, data.length),
       );
 
-      print("result ${message.result}");
-
       if (message.isValid) {
         onMsg(message);
       } else {

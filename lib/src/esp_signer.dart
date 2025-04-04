@@ -67,13 +67,13 @@ class EspSigner {
     return completer.future.timeout(EspService.TIMEOUT);
   }
 
-  Future<Map<dynamic, dynamic>?> signEvent(Map event) async {
+  Future<Map<String, dynamic>?> signEvent(Map<String, dynamic> event) async {
     if (!(await _checkPubkey())) {
       return null;
     }
 
     var msgIdByte = EspService.randomMessageId();
-    var completer = Completer<Map?>();
+    var completer = Completer<Map<String, dynamic>?>();
 
     String? eventId;
     var eventIdIntf = event["id"];
@@ -81,6 +81,7 @@ class EspSigner {
       eventId = eventIdIntf;
     } else {
       eventId = genNostrEventId(event);
+      print("gened eventId $eventId");
     }
 
     if (eventId == null) {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
 import 'package:hex/hex.dart';
 import 'package:ndk/domain_layer/entities/nip_01_event.dart';
+import 'package:ndk/shared/nips/nip01/bip340.dart';
 
 void main() {
   runApp(const MyApp());
@@ -93,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var theirPubkey =
         "1456e77bf02c6fe604879f61e6c7f772ceec3f9f0116aef3828377d447c5c291";
 
-    var event = Map();
+    var event = Map<String, dynamic>();
     event["created_at"] = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     event["kind"] = 1;
     event["tags"] = [];
@@ -104,20 +105,24 @@ class _MyHomePageState extends State<MyHomePage> {
     if (eventResult != null) {
       var nip01Event = Nip01Event.fromJson(eventResult);
       print("nip01Event.isIdValid ${nip01Event.isIdValid}");
+      var validSig =
+          Bip340.verify(nip01Event.id, nip01Event.sig, nip01Event.pubKey);
+      print("nip01Event.isValidSign $validSig");
     }
 
-    var TEST_TEXT = "Hello, Nostr! This is a test message.";
-    var encryptedText = await espSigner.encrypt(theirPubkey, TEST_TEXT);
-    print("encryptedText $encryptedText");
+    // var TEST_TEXT =
+    //     "Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.";
+    // var encryptedText = await espSigner.encrypt(theirPubkey, TEST_TEXT);
+    // print("encryptedText $encryptedText");
 
-    var sourceText = await espSigner.decrypt(theirPubkey, encryptedText!);
-    print("sourceText $sourceText");
+    // var sourceText = await espSigner.decrypt(theirPubkey, encryptedText!);
+    // print("sourceText $sourceText");
 
-    encryptedText = await espSigner.nip44Encrypt(theirPubkey, TEST_TEXT);
-    print("encryptedText $encryptedText");
+    // encryptedText = await espSigner.nip44Encrypt(theirPubkey, TEST_TEXT);
+    // print("encryptedText $encryptedText");
 
-    sourceText = await espSigner.nip44Decrypt(theirPubkey, encryptedText!);
-    print("sourceText $sourceText");
+    // sourceText = await espSigner.nip44Decrypt(theirPubkey, encryptedText!);
+    // print("sourceText $sourceText");
 
     // var messageId = espService.randomMessageId();
 
