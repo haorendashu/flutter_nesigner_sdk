@@ -30,8 +30,6 @@ class EspService {
 
   static const TIMEOUT = Duration(seconds: 10);
 
-  bool _isReading = false;
-
   Transport transport;
 
   EspService(this.transport);
@@ -261,7 +259,6 @@ class EspService {
 
   // 开始监听消息
   void startListening() {
-    _isReading = true;
     transport.listen((data) {
       _parseSingleFrame(data);
     });
@@ -294,12 +291,6 @@ class EspService {
     } catch (e) {
       print('解析消息错误: $e');
     }
-  }
-
-  // 停止监听
-  void stopListening() {
-    _isReading = false;
-    transport.close();
   }
 
   // AES加密

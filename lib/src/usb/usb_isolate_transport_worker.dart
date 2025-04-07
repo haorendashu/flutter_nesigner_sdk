@@ -85,33 +85,66 @@ class UsbIsolateTransportWorker {
     workerReceivePort.listen(workerReceiveMessage);
 
     config.sendPort.send([UsbIsolateTransportAction.OPEN_SUCCESS]);
+    print("libusb open success!");
   }
 
   void waitForMessage() async {
-    while (true) {
+    while (_running) {
       var message = await queue!.next;
       handleMessage(message);
     }
   }
 
-  void workerReceiveMessage(message) {
-    if (message is Uint8List) {
+  void workerReceiveMessage(data) {
+    if (data is Uint8List) {
       if (streamController != null) {
-        streamController!.add(message);
+        streamController!.add(data);
+      }
+    } else if (data is List && data.isNotEmpty && data[0] is String) {
+      // receive action
+      var action = data[0];
+      if (action == UsbIsolateTransportAction.CLOSE) {
+        doClose();
       }
     }
   }
 
-  void handleMessage(message) {
-    if (message is Uint8List) {
+  bool _running = true;
+
+  void doClose() {
+    _running = false;
+
+    if (streamController != null) {
+      streamController!.close();
+      streamController = null;
+    }
+    if (queue != null) {
+      queue!.cancel();
+      queue = null;
+    }
+    if (deviceHandlePtr != null) {
+      libusb!.libusb_release_interface(deviceHandlePtr!, config.interfaceNum);
+      libusb!.libusb_close(deviceHandlePtr!);
+      deviceHandlePtr = null;
+    }
+    if (libusb != null) {
+      libusb!.libusb_exit(nullptr);
+      libusb = null;
+    }
+
+    print("libusb exit success!");
+  }
+
+  void handleMessage(data) {
+    if (data is Uint8List) {
       // send
-      var data = UsbTransport.convertUint8ListToPointer(message);
+      var dataPointer = UsbTransport.convertUint8ListToPointer(data);
       var actualLength = calloc<Int>(8);
       var sendResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
-          config.outEndPoint, data, message.length, actualLength, 1000);
+          config.outEndPoint, dataPointer, data.length, actualLength, 1000);
       print("sendResult $sendResult");
 
-      if (actualLength.value == message.length) {
+      if (actualLength.value == data.length) {
         // send complete, begin to read
         doRead();
       }

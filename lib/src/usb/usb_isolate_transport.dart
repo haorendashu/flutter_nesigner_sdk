@@ -15,12 +15,22 @@ class UsbIsolateTransport extends Transport {
 
   @override
   Future<bool> close() async {
-    if (isolate != null) {
-      isolate!.kill();
-      return true;
+    if (sendPort != null) {
+      sendPort!.send([UsbIsolateTransportAction.CLOSE]);
+      await Future.delayed(const Duration(milliseconds: 2000));
+      sendPort = null;
     }
 
-    return false;
+    if (receivePort != null) {
+      receivePort!.close();
+      receivePort = null;
+    }
+
+    if (isolate != null) {
+      isolate!.kill();
+    }
+
+    return true;
   }
 
   @override
@@ -78,7 +88,17 @@ class UsbIsolateTransport extends Transport {
 
     _openComplete = Completer<bool>();
 
-    return _openComplete!.future.timeout(const Duration(seconds: 10));
+    return _openComplete!.future
+        .timeout(const Duration(seconds: 10))
+        .then((value) {
+      if (value) {
+        return true;
+      } else {
+        return false;
+      }
+    }).catchError((error) {
+      return false;
+    });
   }
 
   @override
@@ -95,4 +115,6 @@ class UsbIsolateTransport extends Transport {
 class UsbIsolateTransportAction {
   static const OPEN_SUCCESS = "openSuccess";
   static const OPEN_FAIL = "openFail";
+  static const CLOSE = "close";
+  static const CLOSE_SUCCESS = "closeSuccess";
 }
