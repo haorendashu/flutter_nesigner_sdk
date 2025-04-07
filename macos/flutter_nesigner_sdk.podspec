@@ -27,7 +27,7 @@ A new Flutter plugin project.
   s.vendored_libraries = 'libusb-1.0.dylib'
   s.vendored_libraries = 'libusb-1.0_arm64.dylib'
 
-  s.platform = :osx, '10.11'
+  s.platform = :osx, '10.13'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.0'
 end

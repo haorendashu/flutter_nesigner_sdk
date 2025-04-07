@@ -12,6 +12,7 @@ import 'package:pointycastle/export.dart';
 
 import '../flutter_nesigner_sdk.dart';
 import 'utils/crc_util.dart';
+import 'utils/hex_util.dart';
 
 /// EspService .
 ///
@@ -37,7 +38,7 @@ class EspService {
   Map<String, EspCallback> _callbacks = {};
 
   void onMsg(ReceivedMessage reMsg) {
-    var msgId = bytesToHex(reMsg.id);
+    var msgId = HexUtil.bytesToHex(reMsg.id);
     var callback = _callbacks[msgId];
     if (callback != null) {
       callback(reMsg);
@@ -94,7 +95,7 @@ class EspService {
     var msgIdByte = randomMessageId();
     var completer = Completer<int?>();
 
-    final sourceData = key + bytesToHex(aesKey);
+    final sourceData = key + HexUtil.bytesToHex(aesKey);
     // print(sourceData);
 
     var signerTempPubkey = await getTempPubkey();
@@ -155,7 +156,7 @@ class EspService {
     sendMessage(
         callback: (reMsg) {
           if (reMsg.result == MsgResult.OK) {
-            var tempPubkey = bytesToHex(reMsg.encryptedData);
+            var tempPubkey = HexUtil.bytesToHex(reMsg.encryptedData);
             // print("tempPubkey $tempPubkey");
             completer.complete(tempPubkey);
           } else {
@@ -225,7 +226,7 @@ class EspService {
     Uint8List? iv,
   }) {
     if (callback != null) {
-      _callbacks[bytesToHex(messageId)] = callback;
+      _callbacks[HexUtil.bytesToHex(messageId)] = callback;
     }
 
     iv ??= randomMessageId();
@@ -244,7 +245,7 @@ class EspService {
     final output = Uint8List.fromList([
       ...intToTwoBytes(messageType),
       ...messageId,
-      ...hexToBytes(pubkey),
+      ...HexUtil.hexToBytes(pubkey),
       ...iv,
       ...intToTwoBytes(crc),
       ...header,
@@ -275,7 +276,7 @@ class EspService {
         type: twoBytesToInt(data.sublist(0, 2)),
         id: data.sublist(2, 18),
         result: twoBytesToInt(data.sublist(18, 20)),
-        pubkey: bytesToHex(data.sublist(20, 52)),
+        pubkey: HexUtil.bytesToHex(data.sublist(20, 52)),
         iv: data.sublist(52, 68),
         receivedCrc: twoBytesToInt(data.sublist(68, 70)),
         dataLength:
@@ -346,27 +347,6 @@ class EspService {
     return (bytes[0] << 8) | bytes[1];
   }
 
-  // 将十六进制字符串转换为字节数据
-  Uint8List hexToBytes(String hex) {
-    if (hex.length % 2 != 0) {
-      throw ArgumentError('Hex string must have an even number of characters');
-    }
-
-    final Uint8List bytes = Uint8List(hex.length ~/ 2);
-    for (int i = 0; i < hex.length; i += 2) {
-      bytes[i ~/ 2] = int.parse(hex.substring(i, i + 2), radix: 16);
-    }
-    return bytes;
-  }
-
-// 将字节数据转换为十六进制字符串
-  String bytesToHex(Uint8List bytes) {
-    final buffer = StringBuffer();
-    for (final byte in bytes) {
-      buffer.write(byte.toRadixString(16).padLeft(2, '0'));
-    }
-    return buffer.toString();
-  }
 }
 
 class ReceivedMessage {

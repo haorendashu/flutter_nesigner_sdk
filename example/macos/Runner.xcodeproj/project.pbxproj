@@ -29,8 +29,6 @@
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		3A6EFFBE9DC9A4BC37DC21A5 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81FE92E9C2AAA40768426D1 /* Pods_Runner.framework */; };
 		7DCBDBA237E23DC2CFF8E05A /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33F49A905ACE437960C5C573 /* Pods_RunnerTests.framework */; };
-		897688712D9BD62300BB0893 /* libusb-1.0_arm64.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 897688702D9BD62300BB0893 /* libusb-1.0_arm64.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		89F020012D9B099900507849 /* libusb-1.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 89F020002D9B099900507849 /* libusb-1.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,8 +65,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				897688712D9BD62300BB0893 /* libusb-1.0_arm64.dylib in CopyFiles */,
-				89F020012D9B099900507849 /* libusb-1.0.dylib in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,8 +93,6 @@
 		64D6D934839B1667AB187069 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		66AA9FC1B09F5D7A25F21B56 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
-		897688702D9BD62300BB0893 /* libusb-1.0_arm64.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libusb-1.0_arm64.dylib"; path = "../libusb-1.0/libusb-1.0_arm64.dylib"; sourceTree = "<group>"; };
-		89F020002D9B099900507849 /* libusb-1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libusb-1.0.dylib"; path = "Runner/Frameworks/libusb-1.0.dylib"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		B81FE92E9C2AAA40768426D1 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BC0D751AAB0B9B2E4B5994EB /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -160,8 +154,6 @@
 		33CC10E42044A3C60003C045 = {
 			isa = PBXGroup;
 			children = (
-				897688702D9BD62300BB0893 /* libusb-1.0_arm64.dylib */,
-				89F020002D9B099900507849 /* libusb-1.0.dylib */,
 				33FAB671232836740065AC1E /* Runner */,
 				33CEB47122A05771004F2AC0 /* Flutter */,
 				331C80D6294CF71000263BE5 /* RunnerTests */,

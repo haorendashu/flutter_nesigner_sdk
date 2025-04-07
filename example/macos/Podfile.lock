@@ -4,12 +4,15 @@ PODS:
   - flutter_libserialport (0.0.1):
     - FlutterMacOS
     - libserialport
+  - flutter_nesigner_sdk (0.0.1):
+    - FlutterMacOS
   - FlutterMacOS (1.0.0)
   - libserialport (0.1.1)
 
 DEPENDENCIES:
   - cryptography_flutter (from `Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos`)
   - flutter_libserialport (from `Flutter/ephemeral/.symlinks/plugins/flutter_libserialport/macos`)
+  - flutter_nesigner_sdk (from `Flutter/ephemeral/.symlinks/plugins/flutter_nesigner_sdk/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
 
 SPEC REPOS:
@@ -21,12 +24,15 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos
   flutter_libserialport:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_libserialport/macos
+  flutter_nesigner_sdk:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_nesigner_sdk/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
 
 SPEC CHECKSUMS:
   cryptography_flutter: 33e8726fef117a6f306382f6fa34e173642cc64f
   flutter_libserialport: 2c523cb8d8203fc6d1b0da88190da31ac970eb93
+  flutter_nesigner_sdk: 1042ae617d2949452d8cd3af614fb4693d2a84d5
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   libserialport: 1cb25e66ef3c92a8e59c2ea3820302c3fa2268cd
 

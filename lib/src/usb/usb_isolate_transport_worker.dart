@@ -9,6 +9,8 @@ import 'package:libusb/libusb64.dart';
 import 'package:ffi/ffi.dart';
 import 'package:async/async.dart';
 
+import '../utils/hex_util.dart';
+
 class UsbIsolateTransportWorkerConfig {
   RootIsolateToken rootIsolateToken;
   SendPort sendPort;
@@ -67,6 +69,34 @@ class UsbIsolateTransportWorker {
       print("libusb_open_device_with_vid_pid fail");
       return;
     }
+
+    var devPtr = libusb!.libusb_get_device(deviceHandlePtr!);
+    var descPtr = calloc<libusb_device_descriptor>();
+    var getDescResult = libusb!.libusb_get_device_descriptor(devPtr, descPtr);
+    print('libusb_get_device_descriptor result $getDescResult');
+
+    var currentConfigIdxPtr = calloc<Int>();
+    var getConfigResult =
+      libusb!.libusb_get_configuration(deviceHandlePtr!, currentConfigIdxPtr);
+    print('getConfigResult $getConfigResult');
+    print('getConfigResult config ${currentConfigIdxPtr.value}');
+
+    var configPtr = calloc<Pointer<libusb_config_descriptor>>();
+    var getConfigDescResult = libusb!.libusb_get_config_descriptor(
+        devPtr, currentConfigIdxPtr.value - 1, configPtr);
+    print('libusb_get_config_descriptor result $getConfigDescResult');
+    var configDescriptor = configPtr.value.ref;
+    print('bNumInterfaces ${configDescriptor.bNumInterfaces}');
+
+      var interfaceDescriptor = configDescriptor.interface1.ref.altsetting.ref;
+    print("bNumEndpoints ${interfaceDescriptor.bNumEndpoints}");
+    print("${interfaceDescriptor.endpoint.ref.bEndpointAddress}");
+
+    var interfaceDescriptor1 =
+        (configDescriptor.interface1 + 1).ref.altsetting.ref;
+    print("bNumEndpoints ${interfaceDescriptor1.bNumEndpoints}");
+    print("${interfaceDescriptor1.endpoint.ref.bEndpointAddress}");
+    print("${(interfaceDescriptor1.endpoint + 1).ref.bEndpointAddress}");
 
     var result =
         libusb!.libusb_claim_interface(deviceHandlePtr!, config.interfaceNum);
@@ -235,8 +265,8 @@ class UsbIsolateTransportWorker {
 
       var portCount = libusb!.libusb_get_port_numbers(dev, path, 8);
       if (portCount > 0) {
-        // var hexList = path.asTypedList(portCount).map((e) => hex.encode([e]));
-        // print(' path: ${hexList.join('.')}');
+        var hexList = path.asTypedList(portCount).map((e) => HexUtil.bytesToHex(Uint8List.fromList([e])));
+        print(' path: ${hexList.join('.')}');
       }
     }
 
