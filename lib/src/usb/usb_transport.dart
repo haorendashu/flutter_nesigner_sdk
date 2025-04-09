@@ -14,13 +14,13 @@ class UsbTransport {
 
   static const int PID = 0x3434;
 
-  static const int CONFIG_NUM = 1;
+  static const int CONFIG_NUM = 0;
 
   static const int INTERFACE_NUM = 1;
 
-  static const int OUT_ENDPOINT = 0x01;
+  static const int OUT_ENDPOINT = 2;
 
-  static const int IN_ENDPOINT = 0x81;
+  static const int IN_ENDPOINT = 130;
 
   static String? _libPath;
 
