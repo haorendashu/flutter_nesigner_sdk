@@ -83,6 +83,7 @@ class UsbIsolateTransport extends Transport {
         interfaceNum: UsbTransport.INTERFACE_NUM,
         outEndPoint: UsbTransport.OUT_ENDPOINT,
         inEndPoint: UsbTransport.IN_ENDPOINT,
+        macosArchIsArm: UsbTransport.macosArchIsArm,
       ),
     );
 

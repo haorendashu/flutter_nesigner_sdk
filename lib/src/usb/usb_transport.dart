@@ -14,24 +14,24 @@ class UsbTransport {
 
   static const int PID = 0x3434;
 
-  static const int CONFIG_NUM = 0;
+  static const int CONFIG_NUM = 1;
 
   static const int INTERFACE_NUM = 1;
 
-  static const int OUT_ENDPOINT = 2;
+  static const int OUT_ENDPOINT = 0x01;
 
-  static const int IN_ENDPOINT = 130;
+  static const int IN_ENDPOINT = 0x81;
 
   static String? _libPath;
 
-  static bool? _macosArchIsArm;
+  static bool? macosArchIsArm;
 
   static void setLibrary(String libPath) {
     _libPath = libPath;
   }
 
   static void setMacOSArchIsArm(bool isArm) {
-    _macosArchIsArm = isArm;
+    macosArchIsArm = isArm;
   }
 
   static DynamicLibrary loadLibrary() {
@@ -46,8 +46,8 @@ class UsbTransport {
       return DynamicLibrary.open('$currentPath/libusb-1.0.dll');
     }
     if (Platform.isMacOS) {
-      if (_macosArchIsArm != null && !_macosArchIsArm!) {
-        var filePath = _getMacOSLibraryPath("libusb-1.0.dll");
+      if (macosArchIsArm != null && !macosArchIsArm!) {
+        var filePath = _getMacOSLibraryPath("libusb-1.0.dylib");
         return DynamicLibrary.open(filePath);
       }
       var filePath = _getMacOSLibraryPath("libusb-1.0_arm64.dylib");
@@ -65,6 +65,7 @@ class UsbTransport {
     if (Platform.isMacOS) {
       // 获取应用 Frameworks 目录路径
       final executablePath = Platform.resolvedExecutable;
+      print("executablePath $executablePath");
       var paths = executablePath.split("/");
       paths = [...paths.sublist(0, paths.length - 2), "Frameworks"];
       return "${paths.join("/")}/$name";
@@ -75,13 +76,16 @@ class UsbTransport {
   static bool existNesigner() {
     try {
       var libusb = Libusb(UsbTransport.loadLibrary());
+      print("libusb load success!");
       var initResult = libusb.libusb_init(nullptr);
+      print("libusb init success! $initResult");
       if (initResult < 0) {
         return false;
       }
 
       var deviceListPtr = calloc<Pointer<Pointer<libusb_device>>>();
       var count = libusb.libusb_get_device_list(nullptr, deviceListPtr);
+      print("libusb_get_device_list success! $count");
       if (count < 0) {
         calloc.free(deviceListPtr);
         return false;
@@ -91,10 +95,16 @@ class UsbTransport {
       var deviceList = deviceListPtr.value;
       for (var i = 0; deviceList[i] != nullptr; i++) {
         var dev = deviceList[i];
+        print(dev);
         var result = libusb.libusb_get_device_descriptor(dev, descPtr);
         if (result < 0) continue;
 
         var desc = descPtr.ref;
+        var idVendor = desc.idVendor.toRadixString(16).padLeft(4, '0');
+        var idProduct = desc.idProduct.toRadixString(16).padLeft(4, '0');
+        print(
+            '$idVendor:$idProduct vid:${desc.idVendor} pid:${desc.idProduct}');
+
         if (desc.idVendor == VID && desc.idProduct == PID) {
           calloc.free(deviceListPtr);
           calloc.free(descPtr);

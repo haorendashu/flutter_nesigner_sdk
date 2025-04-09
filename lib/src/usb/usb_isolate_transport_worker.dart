@@ -20,6 +20,7 @@ class UsbIsolateTransportWorkerConfig {
   int interfaceNum;
   int outEndPoint;
   int inEndPoint;
+  bool? macosArchIsArm;
   UsbIsolateTransportWorkerConfig({
     required this.rootIsolateToken,
     required this.sendPort,
@@ -29,6 +30,7 @@ class UsbIsolateTransportWorkerConfig {
     required this.interfaceNum,
     required this.outEndPoint,
     required this.inEndPoint,
+    this.macosArchIsArm,
   });
 }
 
@@ -50,6 +52,7 @@ class UsbIsolateTransportWorker {
   StreamQueue<Uint8List>? queue;
 
   void run() {
+    UsbTransport.setMacOSArchIsArm(config.macosArchIsArm ?? true);
     BackgroundIsolateBinaryMessenger.ensureInitialized(config.rootIsolateToken);
 
     libusb = Libusb(UsbTransport.loadLibrary());
@@ -62,6 +65,14 @@ class UsbIsolateTransportWorker {
     var deviceListPtr = calloc<Pointer<Pointer<libusb_device>>>();
     listdevs(deviceListPtr);
     calloc.free(deviceListPtr);
+
+    print("USB设备信息:");
+    print("VID: 0x${config.vid.toRadixString(16)}");
+    print("PID: 0x${config.pid.toRadixString(16)}");
+    print("配置号: ${config.configNum}");
+    print("接口号: ${config.interfaceNum}");
+    print("输入端点: 0x${config.inEndPoint.toRadixString(16)}");
+    print("输出端点: 0x${config.outEndPoint.toRadixString(16)}");
 
     deviceHandlePtr = libusb!
         .libusb_open_device_with_vid_pid(nullptr, config.vid, config.pid);
@@ -81,9 +92,28 @@ class UsbIsolateTransportWorker {
     print('getConfigResult $getConfigResult');
     print('getConfigResult config ${currentConfigIdxPtr.value}');
 
+    // Detach kernel driver if necessary
+    var hasDriver = libusb!.libusb_kernel_driver_active(deviceHandlePtr!, config.interfaceNum);
+    if (hasDriver == 1) {
+      var detachResult = libusb!.libusb_detach_kernel_driver(deviceHandlePtr!, config.interfaceNum);
+      if (detachResult != libusb_error.LIBUSB_SUCCESS) {
+        print("libusb_detach_kernel_driver error $detachResult");
+        return;
+      }
+    }
+
+    // Set configuration if not already set
+    if (currentConfigIdxPtr.value != config.configNum) {
+      var setConfigResult = libusb!.libusb_set_configuration(deviceHandlePtr!, config.configNum);
+      if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {
+        print("libusb_set_configuration error $setConfigResult");
+      }
+    }
+
+    var configIndex = currentConfigIdxPtr.value > 0 ? currentConfigIdxPtr.value - 1 : 0;
     var configPtr = calloc<Pointer<libusb_config_descriptor>>();
     var getConfigDescResult = libusb!.libusb_get_config_descriptor(
-        devPtr, currentConfigIdxPtr.value - 1, configPtr);
+        devPtr, configIndex, configPtr);
     print('libusb_get_config_descriptor result $getConfigDescResult');
     var configDescriptor = configPtr.value.ref;
     print('bNumInterfaces ${configDescriptor.bNumInterfaces}');
