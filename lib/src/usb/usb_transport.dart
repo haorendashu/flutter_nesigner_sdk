@@ -14,7 +14,7 @@ class UsbTransport {
 
   static const int PID = 0x3434;
 
-  static const int CONFIG_NUM = 0;
+  static const int CONFIG_NUM = 1;
 
   static const int INTERFACE_NUM = 1;
 

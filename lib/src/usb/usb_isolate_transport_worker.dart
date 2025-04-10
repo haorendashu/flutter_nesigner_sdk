@@ -87,12 +87,6 @@ class UsbIsolateTransportWorker {
     // var resetResult = libusb!.libusb_reset_device(deviceHandlePtr!);
     // print('libusb_reset_device result: $resetResult');
 
-    var currentConfigIdxPtr = calloc<Int>();
-    var getConfigResult =
-        libusb!.libusb_get_configuration(deviceHandlePtr!, currentConfigIdxPtr);
-    print('getConfigResult $getConfigResult');
-    print('getConfigResult config ${currentConfigIdxPtr.value}');
-
     // Detach kernel driver if necessary
     var hasDriver = libusb!
         .libusb_kernel_driver_active(deviceHandlePtr!, config.interfaceNum);
@@ -105,29 +99,18 @@ class UsbIsolateTransportWorker {
       }
     }
 
-    // Set configuration if not already set
-    // if (currentConfigIdxPtr.value != config.configNum) {
-    //   var setConfigResult =
-    //       libusb!.libusb_set_configuration(deviceHandlePtr!, config.configNum);
-    //   if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {
-    //     print("libusb_set_configuration error $setConfigResult");
-    //   }
-    // } else if (Platform.isMacOS) {
-    //   var setConfigResult =
-    //       libusb!.libusb_set_configuration(deviceHandlePtr!, 0);
-    //   print("macos libusb_set_configuration result $setConfigResult");
-    //   if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {
-    //     print("macos libusb_set_configuration error $setConfigResult");
-    //   }
-    // }
+    var currentConfigIdxPtr = calloc<Int>();
+    var getConfigResult =
+        libusb!.libusb_get_configuration(deviceHandlePtr!, currentConfigIdxPtr);
+    print('getConfigResult $getConfigResult');
+    print('getConfigResult config ${currentConfigIdxPtr.value}');
 
-    // var setConfigResult =
-    //     libusb!.libusb_set_configuration(deviceHandlePtr!, config.configNum);
-    var setConfigResult =
-        libusb!.libusb_set_configuration(deviceHandlePtr!, 1);
-    print("libusb_set_configuration result $setConfigResult");
-    if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {
-      // print("libusb_set_configuration error $setConfigResult");
+    // Set configuration if not already set
+    if (currentConfigIdxPtr.value != config.configNum) {
+      var setConfigResult =
+          libusb!.libusb_set_configuration(deviceHandlePtr!, config.configNum);
+      print("libusb_set_configuration result $setConfigResult");
+      if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {}
     }
 
     var devPtr = libusb!.libusb_get_device(deviceHandlePtr!);
