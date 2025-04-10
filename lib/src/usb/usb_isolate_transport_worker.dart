@@ -52,7 +52,7 @@ class UsbIsolateTransportWorker {
   StreamController<Uint8List>? streamController;
   StreamQueue<Uint8List>? queue;
 
-  void run() {
+  Future<void> run() async {
     UsbTransport.setMacOSArchIsArm(config.macosArchIsArm ?? true);
     BackgroundIsolateBinaryMessenger.ensureInitialized(config.rootIsolateToken);
 
@@ -63,7 +63,7 @@ class UsbIsolateTransportWorker {
     }
     print("init success!");
 
-    libusb!.libusb_set_debug(nullptr, 4);
+    // libusb!.libusb_set_debug(nullptr, 4);
 
     var deviceListPtr = calloc<Pointer<Pointer<libusb_device>>>();
     listdevs(deviceListPtr);
@@ -83,21 +83,34 @@ class UsbIsolateTransportWorker {
       print("libusb_open_device_with_vid_pid fail");
       return;
     }
+    print("divice addr ${deviceHandlePtr!.address}");
 
     // var resetResult = libusb!.libusb_reset_device(deviceHandlePtr!);
     // print('libusb_reset_device result: $resetResult');
 
-    // Detach kernel driver if necessary
-    var hasDriver = libusb!
-        .libusb_kernel_driver_active(deviceHandlePtr!, config.interfaceNum);
-    if (hasDriver == 1) {
-      var detachResult = libusb!
-          .libusb_detach_kernel_driver(deviceHandlePtr!, config.interfaceNum);
-      if (detachResult != libusb_error.LIBUSB_SUCCESS) {
-        print("libusb_detach_kernel_driver error $detachResult");
-        return;
-      }
-    }
+    // // Detach kernel driver if necessary
+    // var hasDriver = libusb!
+    //     .libusb_kernel_driver_active(deviceHandlePtr!, config.interfaceNum);
+    // print("hasDriver $hasDriver");
+    // if (hasDriver == 0) {
+    //   print("kernel driver not active");
+    // } else {
+    //   print("kernel driver active");
+    // }
+    // if (hasDriver == 0) {
+    //   print("Kernel driver not active");
+    // } else if (hasDriver == 1) {
+    //   print("Kernel driver active");
+    //   var detachResult = libusb!.libusb_detach_kernel_driver(deviceHandlePtr!, config.interfaceNum);
+    //   if (detachResult != libusb_error.LIBUSB_SUCCESS) {
+    //     print("Failed to detach kernel driver: $detachResult");
+    //     return;
+    //   }
+    // } else if (hasDriver == libusb_error.LIBUSB_ERROR_NOT_FOUND) {
+    //   print("No kernel driver found for interface ${config.interfaceNum}");
+    // } else {
+    //   print("libusb_kernel_driver_active error: $hasDriver");
+    // }
 
     var currentConfigIdxPtr = calloc<Int>();
     var getConfigResult =
@@ -113,29 +126,30 @@ class UsbIsolateTransportWorker {
       if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {}
     }
 
-    var devPtr = libusb!.libusb_get_device(deviceHandlePtr!);
-    var descPtr = calloc<libusb_device_descriptor>();
-    var getDescResult = libusb!.libusb_get_device_descriptor(devPtr, descPtr);
-    print('libusb_get_device_descriptor result $getDescResult');
+    // var devPtr = libusb!.libusb_get_device(deviceHandlePtr!);
+    // var descPtr = calloc<libusb_device_descriptor>();
+    // var getDescResult = libusb!.libusb_get_device_descriptor(devPtr, descPtr);
+    // print('libusb_get_device_descriptor result $getDescResult');
 
-    var configIndex =
-        currentConfigIdxPtr.value > 0 ? currentConfigIdxPtr.value - 1 : 0;
-    var configPtr = calloc<Pointer<libusb_config_descriptor>>();
-    var getConfigDescResult =
-        libusb!.libusb_get_config_descriptor(devPtr, configIndex, configPtr);
-    print('libusb_get_config_descriptor result $getConfigDescResult');
-    var configDescriptor = configPtr.value.ref;
-    print('bNumInterfaces ${configDescriptor.bNumInterfaces}');
+    // var configIndex =
+    //     currentConfigIdxPtr.value > 0 ? currentConfigIdxPtr.value - 1 : 0;
+    // var configPtr = calloc<Pointer<libusb_config_descriptor>>();
+    // var getConfigDescResult =
+    //     libusb!.libusb_get_config_descriptor(devPtr, configIndex, configPtr);
+    // print('libusb_get_config_descriptor result $getConfigDescResult');
+    // var configDescriptor = configPtr.value.ref;
+    // print('Configuration value: ${configDescriptor.bConfigurationValue}');
+    // print('bNumInterfaces ${configDescriptor.bNumInterfaces}');
 
-    var interfaceDescriptor = configDescriptor.interface1.ref.altsetting.ref;
-    print("bNumEndpoints ${interfaceDescriptor.bNumEndpoints}");
-    print("${interfaceDescriptor.endpoint.ref.bEndpointAddress}");
+    // var interfaceDescriptor = configDescriptor.interface1.ref.altsetting.ref;
+    // print("bNumEndpoints ${interfaceDescriptor.bNumEndpoints}");
+    // print("${interfaceDescriptor.endpoint.ref.bEndpointAddress}");
 
-    var interfaceDescriptor1 =
-        (configDescriptor.interface1 + 1).ref.altsetting.ref;
-    print("bNumEndpoints ${interfaceDescriptor1.bNumEndpoints}");
-    print("${interfaceDescriptor1.endpoint.ref.bEndpointAddress}");
-    print("${(interfaceDescriptor1.endpoint + 1).ref.bEndpointAddress}");
+    // var interfaceDescriptor1 =
+    //     (configDescriptor.interface1 + 1).ref.altsetting.ref;
+    // print("bNumEndpoints ${interfaceDescriptor1.bNumEndpoints}");
+    // print("${interfaceDescriptor1.endpoint.ref.bEndpointAddress}");
+    // print("${(interfaceDescriptor1.endpoint + 1).ref.bEndpointAddress}");
 
     var result =
         libusb!.libusb_claim_interface(deviceHandlePtr!, config.interfaceNum);
