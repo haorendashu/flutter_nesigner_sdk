@@ -28,5 +28,17 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>IOClass</key>
+	<string>IOUSBDevice</string>
+	<key>IOProviderClass</key>
+	<string>IOUSBDevice</string>
+	<key>idVendor</key>
+	<integer>8995</integer>
+	<key>idProduct</key>
+	<integer>13364</integer>
+	<key>com.apple.security.device.usb</key>
+	<true/>
+	<key>NSUSBUsageDescription</key>
+	<string>App need to access the usb for hardward signer.</string>
 </dict>
 </plist>

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ffi';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
@@ -62,6 +63,8 @@ class UsbIsolateTransportWorker {
     }
     print("init success!");
 
+    libusb!.libusb_set_debug(nullptr, 4);
+
     var deviceListPtr = calloc<Pointer<Pointer<libusb_device>>>();
     listdevs(deviceListPtr);
     calloc.free(deviceListPtr);
@@ -81,10 +84,8 @@ class UsbIsolateTransportWorker {
       return;
     }
 
-    // var devPtr = libusb!.libusb_get_device(deviceHandlePtr!);
-    // var descPtr = calloc<libusb_device_descriptor>();
-    // var getDescResult = libusb!.libusb_get_device_descriptor(devPtr, descPtr);
-    // print('libusb_get_device_descriptor result $getDescResult');
+    // var resetResult = libusb!.libusb_reset_device(deviceHandlePtr!);
+    // print('libusb_reset_device result: $resetResult');
 
     var currentConfigIdxPtr = calloc<Int>();
     var getConfigResult =
@@ -105,32 +106,53 @@ class UsbIsolateTransportWorker {
     }
 
     // Set configuration if not already set
-    if (currentConfigIdxPtr.value != config.configNum) {
-      var setConfigResult =
-          libusb!.libusb_set_configuration(deviceHandlePtr!, config.configNum);
-      if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {
-        print("libusb_set_configuration error $setConfigResult");
-      }
+    // if (currentConfigIdxPtr.value != config.configNum) {
+    //   var setConfigResult =
+    //       libusb!.libusb_set_configuration(deviceHandlePtr!, config.configNum);
+    //   if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {
+    //     print("libusb_set_configuration error $setConfigResult");
+    //   }
+    // } else if (Platform.isMacOS) {
+    //   var setConfigResult =
+    //       libusb!.libusb_set_configuration(deviceHandlePtr!, 0);
+    //   print("macos libusb_set_configuration result $setConfigResult");
+    //   if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {
+    //     print("macos libusb_set_configuration error $setConfigResult");
+    //   }
+    // }
+
+    // var setConfigResult =
+    //     libusb!.libusb_set_configuration(deviceHandlePtr!, config.configNum);
+    var setConfigResult =
+        libusb!.libusb_set_configuration(deviceHandlePtr!, 1);
+    print("libusb_set_configuration result $setConfigResult");
+    if (setConfigResult != libusb_error.LIBUSB_SUCCESS) {
+      // print("libusb_set_configuration error $setConfigResult");
     }
 
-    // var configIndex =
-    //     currentConfigIdxPtr.value > 0 ? currentConfigIdxPtr.value - 1 : 0;
-    // var configPtr = calloc<Pointer<libusb_config_descriptor>>();
-    // var getConfigDescResult =
-    //     libusb!.libusb_get_config_descriptor(devPtr, configIndex, configPtr);
-    // print('libusb_get_config_descriptor result $getConfigDescResult');
-    // var configDescriptor = configPtr.value.ref;
-    // print('bNumInterfaces ${configDescriptor.bNumInterfaces}');
+    var devPtr = libusb!.libusb_get_device(deviceHandlePtr!);
+    var descPtr = calloc<libusb_device_descriptor>();
+    var getDescResult = libusb!.libusb_get_device_descriptor(devPtr, descPtr);
+    print('libusb_get_device_descriptor result $getDescResult');
 
-    // var interfaceDescriptor = configDescriptor.interface1.ref.altsetting.ref;
-    // print("bNumEndpoints ${interfaceDescriptor.bNumEndpoints}");
-    // print("${interfaceDescriptor.endpoint.ref.bEndpointAddress}");
+    var configIndex =
+        currentConfigIdxPtr.value > 0 ? currentConfigIdxPtr.value - 1 : 0;
+    var configPtr = calloc<Pointer<libusb_config_descriptor>>();
+    var getConfigDescResult =
+        libusb!.libusb_get_config_descriptor(devPtr, configIndex, configPtr);
+    print('libusb_get_config_descriptor result $getConfigDescResult');
+    var configDescriptor = configPtr.value.ref;
+    print('bNumInterfaces ${configDescriptor.bNumInterfaces}');
 
-    // var interfaceDescriptor1 =
-    //     (configDescriptor.interface1 + 1).ref.altsetting.ref;
-    // print("bNumEndpoints ${interfaceDescriptor1.bNumEndpoints}");
-    // print("${interfaceDescriptor1.endpoint.ref.bEndpointAddress}");
-    // print("${(interfaceDescriptor1.endpoint + 1).ref.bEndpointAddress}");
+    var interfaceDescriptor = configDescriptor.interface1.ref.altsetting.ref;
+    print("bNumEndpoints ${interfaceDescriptor.bNumEndpoints}");
+    print("${interfaceDescriptor.endpoint.ref.bEndpointAddress}");
+
+    var interfaceDescriptor1 =
+        (configDescriptor.interface1 + 1).ref.altsetting.ref;
+    print("bNumEndpoints ${interfaceDescriptor1.bNumEndpoints}");
+    print("${interfaceDescriptor1.endpoint.ref.bEndpointAddress}");
+    print("${(interfaceDescriptor1.endpoint + 1).ref.bEndpointAddress}");
 
     var result =
         libusb!.libusb_claim_interface(deviceHandlePtr!, config.interfaceNum);
