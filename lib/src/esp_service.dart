@@ -346,7 +346,6 @@ class EspService {
     // 高字节左移 8 位，然后与低字节进行按位或运算
     return (bytes[0] << 8) | bytes[1];
   }
-
 }
 
 class ReceivedMessage {

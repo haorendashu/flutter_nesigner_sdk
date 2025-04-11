@@ -89,17 +89,7 @@ class UsbIsolateTransport extends Transport {
 
     _openComplete = Completer<bool>();
 
-    return _openComplete!.future
-        .timeout(const Duration(seconds: 10))
-        .then((value) {
-      if (value) {
-        return true;
-      } else {
-        return false;
-      }
-    }).catchError((error) {
-      return false;
-    });
+    return _openComplete!.future.timeout(const Duration(seconds: 10));
   }
 
   @override
