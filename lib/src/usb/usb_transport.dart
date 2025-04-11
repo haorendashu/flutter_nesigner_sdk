@@ -55,7 +55,7 @@ class UsbTransport {
     } else if (Platform.isLinux) {
       final executablePath = Platform.resolvedExecutable;
       var paths = executablePath.split("/");
-      var currentPath = [...paths.sublist(0, paths.length - 1)].join("/");
+      var currentPath = [...paths.sublist(0, paths.length - 1), "lib"].join("/");
       return DynamicLibrary.open('$currentPath/libusb-1.0.so');
     }
     throw 'libusb dynamic library not found';
