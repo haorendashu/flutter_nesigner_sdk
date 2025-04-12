@@ -227,7 +227,7 @@ class UsbIsolateTransportWorker {
       var actualLength = calloc<Int>(8);
       var sendResult = libusb!.libusb_bulk_transfer(deviceHandlePtr!,
           config.outEndPoint, dataPointer, data.length, actualLength, 1000);
-      print("sendResult $sendResult");
+      // print("sendResult $sendResult");
 
       if (actualLength.value == data.length) {
         // send complete, begin to read
