@@ -1,11 +1,4 @@
-import 'dart:async';
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/scheduler.dart';
-import 'package:libserialport/libserialport.dart' as ls;
-
 import '../transport/buffer_transport.dart';
-import '../transport/transport.dart';
 
 /// SerialPort
 ///

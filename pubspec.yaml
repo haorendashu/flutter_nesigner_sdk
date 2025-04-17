@@ -11,14 +11,18 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
-  flutter_libserialport: ^0.5.0  
-  # encrypt: ^5.0.3
+  # flutter_libserialport: ^0.5.0
   crypto: ^3.0.6
   kepler: ^1.0.3
   pointycastle: ^3.6.0
   hex: ^0.2.0
   cryptography: ^2.7.0
-  cryptography_flutter: ^2.3.2
+  # cryptography_flutter: ^2.3.2
+  cryptography_flutter:
+    git:
+        url: https://github.com/mvarendorff/cryptography
+        ref: fix/compatibility-agp-8x
+        path: cryptography_flutter
   bip340: ^0.3.0
   string_validator: ^1.1.0
   # libusb: 0.4.23-dev.1+1

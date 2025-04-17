@@ -92,10 +92,11 @@ packages:
   cryptography_flutter:
     dependency: transitive
     description:
-      name: cryptography_flutter
-      sha256: a7fc3f0de42fb0947cbf213257aa3a69c89df561d104723ede8050658621f292
-      url: "https://pub.dev"
-    source: hosted
+      path: cryptography_flutter
+      ref: "fix/compatibility-agp-8x"
+      resolved-ref: "666e4c20a87097f0fc69596dab366c53eea8899d"
+      url: "https://github.com/mvarendorff/cryptography"
+    source: git
     version: "2.3.2"
   cupertino_icons:
     dependency: "direct main"
