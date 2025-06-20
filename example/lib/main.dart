@@ -42,9 +42,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> test() async {
     logText = "";
 
-    var nesignerPorts = await AndroidSerialPort.getNesignerPorts();
-
-    // var nesignerPorts = BaseSerialPort.getNesignerPorts();
+    // var nesignerPorts = await AndroidSerialPort.getNesignerPorts();
+    var nesignerPorts = BaseSerialPort.getNesignerPorts();
 
     if (nesignerPorts.isEmpty) {
       printLog("No nesigner ports found");
@@ -118,19 +117,19 @@ class _MyHomePageState extends State<MyHomePage> {
       printLog("nip01Event.isValidSign $validSig");
     }
 
-    // var TEST_TEXT =
-    //     "Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.";
-    // var encryptedText = await espSigner.encrypt(theirPubkey, TEST_TEXT);
-    // printLog("encryptedText $encryptedText");
+    var TEST_TEXT =
+        "Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.Hello, Nostr! This is a test message.";
+    var encryptedText = await espSigner.encrypt(theirPubkey, TEST_TEXT);
+    printLog("encryptedText $encryptedText");
 
-    // var sourceText = await espSigner.decrypt(theirPubkey, encryptedText!);
-    // printLog("sourceText $sourceText");
+    var sourceText = await espSigner.decrypt(theirPubkey, encryptedText!);
+    printLog("sourceText $sourceText");
 
-    // encryptedText = await espSigner.nip44Encrypt(theirPubkey, TEST_TEXT);
-    // printLog("encryptedText $encryptedText");
+    encryptedText = await espSigner.nip44Encrypt(theirPubkey, TEST_TEXT);
+    printLog("encryptedText $encryptedText");
 
-    // sourceText = await espSigner.nip44Decrypt(theirPubkey, encryptedText!);
-    // printLog("sourceText $sourceText");
+    sourceText = await espSigner.nip44Decrypt(theirPubkey, encryptedText!);
+    printLog("sourceText $sourceText");
 
     // var messageId = espService.randomMessageId();
 

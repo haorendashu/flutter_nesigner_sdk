@@ -96,7 +96,7 @@ class AndroidSerialPort extends SerialPort {
   int? get vendorId => device.vid;
 
   @override
-  Future<int> write(Uint8List bytes) async {
+  Future<int> directWrite(Uint8List bytes) async {
     if (_usbPort == null) {
       return 0;
     }

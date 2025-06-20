@@ -19,5 +19,9 @@ abstract class Transport {
 
   /// Write data to the serial port.
   /// Returns the amount of bytes written.
+  /// This method may split the data into multiple packets if necessary.
   Future<int> write(Uint8List bytes);
+
+  /// Direct write bytes.
+  Future<int> directWrite(Uint8List bytes);
 }

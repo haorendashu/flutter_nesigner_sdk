@@ -27,8 +27,8 @@ dependencies:
   string_validator: ^1.1.0
   usb_serial: ^0.5.2
   # libusb: 0.4.23-dev.1+1
-  libusb:
-    path: ../libusb_ffi/
+  # libusb:
+  #   path: ../libusb_ffi/
 
 dev_dependencies:
   flutter_test:
