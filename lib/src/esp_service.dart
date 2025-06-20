@@ -53,7 +53,7 @@ class EspService {
     var startTime = DateTime.now().millisecondsSinceEpoch;
     var completer = Completer<int?>();
 
-    sendMessage(
+    await sendMessage(
         callback: (reMsg) {
           var endTime = DateTime.now().millisecondsSinceEpoch;
           completer.complete(endTime - startTime);
@@ -66,13 +66,13 @@ class EspService {
     return await completer.future.timeout(TIMEOUT);
   }
 
-  Future<String?> echo(Uint8List aesKey, String msgContent) {
+  Future<String?> echo(Uint8List aesKey, String msgContent) async {
     var msgIdByte = randomMessageId();
     var completer = Completer<String?>();
 
     var data = utf8.encode(msgContent);
 
-    sendMessage(
+    await sendMessage(
         callback: (reMsg) {
           if (reMsg.result == MsgResult.OK) {
             var decryptedData =
@@ -111,7 +111,7 @@ class EspService {
     // print(Uint8List.fromList(encryptedText.codeUnits));
     // print(utf8.encode(encryptedText));
 
-    sendMessage(
+    await sendMessage(
         callback: (reMsg) {
           completer.complete(reMsg.result);
         },
@@ -131,7 +131,7 @@ class EspService {
     var iv = randomMessageId();
     var data = Uint8List.fromList(iv);
 
-    sendMessage(
+    await sendMessage(
         callback: (reMsg) {
           if (reMsg.result == MsgResult.OK) {
             completer.complete(reMsg.result);
@@ -153,7 +153,7 @@ class EspService {
     var msgIdByte = EspService.randomMessageId();
     var completer = Completer<String?>();
 
-    sendMessage(
+    await sendMessage(
         callback: (reMsg) {
           if (reMsg.result == MsgResult.OK) {
             var tempPubkey = HexUtil.bytesToHex(reMsg.encryptedData);
@@ -216,7 +216,7 @@ class EspService {
   }
 
   // 发送消息
-  void sendMessage({
+  Future<int> sendMessage({
     EspCallback? callback,
     Uint8List? aesKey,
     required int messageType,
@@ -224,7 +224,7 @@ class EspService {
     required String pubkey,
     required Uint8List data,
     Uint8List? iv,
-  }) {
+  }) async {
     if (callback != null) {
       _callbacks[HexUtil.bytesToHex(messageId)] = callback;
     }
@@ -255,7 +255,7 @@ class EspService {
     // print("send fullLength ${output.length}");
     // print(output);
 
-    transport.write(output);
+    return await transport.write(output);
   }
 
   // 开始监听消息

@@ -3,6 +3,7 @@ library flutter_nesigner_sdk;
 import 'flutter_nesigner_sdk_platform_interface.dart';
 
 export 'src/consts/msg_type.dart';
+export 'src/serial_port/android_serial_port.dart';
 export 'src/serial_port/base_serial_port.dart';
 export 'src/serial_port/enums.dart';
 export 'src/serial_port/serial_port.dart';

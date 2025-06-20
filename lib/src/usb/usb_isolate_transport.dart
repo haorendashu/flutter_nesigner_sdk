@@ -93,7 +93,7 @@ class UsbIsolateTransport extends Transport {
   }
 
   @override
-  int write(Uint8List bytes) {
+  Future<int> write(Uint8List bytes) async {
     if (sendPort != null) {
       sendPort!.send(bytes);
       return bytes.length;

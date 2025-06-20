@@ -101,7 +101,7 @@ class BaseSerialPort extends SerialPort {
   ls.SerialPortReader? _reader;
 
   @override
-  int write(Uint8List bytes) {
+  Future<int> write(Uint8List bytes) async {
     return sp.write(bytes);
   }
 }

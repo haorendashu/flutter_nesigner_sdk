@@ -41,17 +41,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> test() async {
     logText = "";
-    var nesignerPorts = BaseSerialPort.getNesignerPorts();
+
+    var nesignerPorts = await AndroidSerialPort.getNesignerPorts();
+
+    // var nesignerPorts = BaseSerialPort.getNesignerPorts();
+
     if (nesignerPorts.isEmpty) {
       printLog("No nesigner ports found");
       return;
     }
-
     SerialPort serialPort = nesignerPorts.first;
     printLog("Using nesigner port: ${serialPort.name}");
     var espService = EspService(serialPort);
 
-    // var usbTransport = UsbTransport();
     // var usbTransport = UsbIsolateTransport();
     // var espService = EspService(usbTransport);
 
@@ -164,15 +166,17 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              logText,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                logText,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

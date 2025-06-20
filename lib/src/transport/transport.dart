@@ -19,5 +19,5 @@ abstract class Transport {
 
   /// Write data to the serial port.
   /// Returns the amount of bytes written.
-  int write(Uint8List bytes);
+  Future<int> write(Uint8List bytes);
 }
