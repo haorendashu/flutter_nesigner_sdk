@@ -1,98 +1,107 @@
-// import 'dart:async';
-// import 'dart:io';
+import 'dart:async';
+import 'dart:io';
 
-// import 'dart:typed_data';
+import 'dart:typed_data';
 
-// import 'serial_port.dart';
-// import 'package:libserialport/libserialport.dart' as ls;
+import 'serial_port.dart';
+import 'package:libserialport/libserialport.dart' as ls;
 
-// class BaseSerialPort extends SerialPort {
-//   static List<String> get availablePorts {
-//     if (Platform.isIOS) {
-//       return [];
-//     }
+class BaseSerialPort extends SerialPort {
+  static List<BaseSerialPort> getNesignerPorts() {
+    if (Platform.isIOS) {
+      return [];
+    }
 
-//     return ls.SerialPort.availablePorts;
-//   }
+    List<BaseSerialPort> nesignerPorts = [];
+    var ports = ls.SerialPort.availablePorts;
+    for (var port in ports) {
+      BaseSerialPort nesignerPort = BaseSerialPort(port);
+      if (nesignerPort.productId == 0x3434 && nesignerPort.vendorId == 0x2323) {
+        nesignerPorts.add(nesignerPort);
+      }
+    }
 
-//   late ls.SerialPort sp;
+    return nesignerPorts;
+  }
 
-//   BaseSerialPort(String name) {
-//     sp = ls.SerialPort(name);
-//     sp.config = ls.SerialPortConfig()
-//       ..baudRate = 115200
-//       ..bits = 8
-//       ..stopBits = 1
-//       ..parity = ls.SerialPortParity.none;
-//   }
+  late ls.SerialPort sp;
 
-//   @override
-//   Future<bool> open() async {
-//     clearBuffer();
-//     return sp.open(mode: ls.SerialPortMode.readWrite);
-//   }
+  BaseSerialPort(String name) {
+    sp = ls.SerialPort(name);
+    sp.config = ls.SerialPortConfig()
+      ..baudRate = 115200
+      ..bits = 8
+      ..stopBits = 1
+      ..parity = ls.SerialPortParity.none;
+  }
 
-//   @override
-//   Future<bool> close() async {
-//     if (_reader != null) {
-//       try {
-//         _reader!.close();
-//       } catch (e) {}
-//     }
-//     sp.close();
-//     sp.dispose();
-//     clearBuffer();
-//     return true;
-//   }
+  @override
+  Future<bool> open() async {
+    clearBuffer();
+    return sp.open(mode: ls.SerialPortMode.readWrite);
+  }
 
-//   @override
-//   bool get isOpen => sp.isOpen;
+  @override
+  Future<bool> close() async {
+    if (_reader != null) {
+      try {
+        _reader!.close();
+      } catch (e) {}
+    }
+    sp.close();
+    sp.dispose();
+    clearBuffer();
+    return true;
+  }
 
-//   @override
-//   String? get name => sp.name;
+  @override
+  bool get isOpen => sp.isOpen;
 
-//   @override
-//   String? get description => sp.description;
+  @override
+  String? get name => sp.name;
 
-//   @override
-//   int get transport => sp.transport;
+  @override
+  String? get description => sp.description;
 
-//   @override
-//   int? get busNumber => sp.busNumber;
+  @override
+  int get transport => sp.transport;
 
-//   @override
-//   int? get deviceNumber => sp.deviceNumber;
+  @override
+  int? get busNumber => sp.busNumber;
 
-//   @override
-//   int? get vendorId => sp.vendorId;
+  @override
+  int? get deviceNumber => sp.deviceNumber;
 
-//   @override
-//   int? get productId => sp.productId;
+  @override
+  int? get vendorId => sp.vendorId;
 
-//   @override
-//   String? get manufacturer => sp.manufacturer;
+  @override
+  int? get productId => sp.productId;
 
-//   @override
-//   String? get productName => sp.productName;
+  @override
+  String? get manufacturer => sp.manufacturer;
 
-//   @override
-//   String? get serialNumber => sp.serialNumber;
+  @override
+  String? get productName => sp.productName;
 
-//   @override
-//   String? get macAddress => sp.macAddress;
+  @override
+  String? get serialNumber => sp.serialNumber;
 
-//   @override
-//   void receiveData(void Function(Uint8List event)? onData,
-//       {Function? onError, void Function()? onDone, bool? cancelOnError}) {
-//     _reader = ls.SerialPortReader(sp);
-//     _reader!.stream.listen(onData,
-//         onError: onError, onDone: onDone, cancelOnError: cancelOnError);
-//   }
+  @override
+  String? get macAddress => sp.macAddress;
 
-//   ls.SerialPortReader? _reader;
+  @override
+  void receiveData(void Function(Uint8List event)? onData,
+      {Function? onError, void Function()? onDone, bool? cancelOnError}) {
+    _reader = ls.SerialPortReader(sp);
+    _reader!.stream.listen(onData,
+        onError: onError, onDone: onDone, cancelOnError: cancelOnError);
+  }
 
-//   @override
-//   int write(Uint8List bytes) {
-//     return sp.write(bytes);
-//   }
-// }
+  ls.SerialPortReader? _reader;
+
+  @override
+  int write(Uint8List bytes) {
+    return sp.write(bytes);
+  }
+}
