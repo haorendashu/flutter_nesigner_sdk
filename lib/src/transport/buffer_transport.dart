@@ -29,7 +29,8 @@ abstract class BufferTransport extends Transport {
               ByteData.sublistView(headerBytes).getUint32(0, Endian.big);
 
           // 计算完整帧长度
-          final fullFrameLength = Transport.PREFIX_LENGTH + totalLen;
+          final fullFrameLength =
+              Transport.PREFIX_LENGTH + totalLen + Transport.CRC_LENGTH;
 
           // print(
           //     "buffer length ${_receiveBuffer.length} data length ${totalLen}");

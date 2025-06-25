@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:typed_data';
 
 abstract class Transport {
-  // 2+16+2+32+16+2+4=74
-  static int PREFIX_LENGTH = 74;
+  // 2+16+2+32+16+4=72
+  static const PREFIX_LENGTH = 72;
+
+  static const CRC_LENGTH = 2;
 
   /// Opens the serial port.
   Future<bool> open();

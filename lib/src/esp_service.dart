@@ -238,7 +238,6 @@ class EspService {
     }
     int dataLength = data.length;
     final header = _buildHeader(dataLength);
-    final crc = CRCUtil.crc16Calculate(data);
 
     // print("send head ${data.length}");
 
@@ -247,10 +246,16 @@ class EspService {
       ...messageId,
       ...HexUtil.hexToBytes(pubkey),
       ...iv,
-      ...intToTwoBytes(crc),
       ...header,
       ...data,
+      ...[0, 0], // crc placehold
     ]);
+
+    var crcData = Uint8List.view(output.buffer, 0, output.length - 2);
+    final crc = CRCUtil.crc16Calculate(crcData);
+    var crcBytes = intToTwoBytes(crc);
+    output[output.length - 2] = crcBytes[0];
+    output[output.length - 1] = crcBytes[1];
 
     // print("send fullLength ${output.length}");
     // print(output);
@@ -278,13 +283,16 @@ class EspService {
         result: twoBytesToInt(data.sublist(18, 20)),
         pubkey: HexUtil.bytesToHex(data.sublist(20, 52)),
         iv: data.sublist(52, 68),
-        receivedCrc: twoBytesToInt(data.sublist(68, 70)),
         dataLength:
-            ByteData.sublistView(data.sublist(70, 74)).getUint32(0, Endian.big),
-        encryptedData: data.sublist(74, data.length),
+            ByteData.sublistView(data.sublist(68, 72)).getUint32(0, Endian.big),
+        encryptedData: data.sublist(72, data.length - 2),
+        receivedCrc: twoBytesToInt(data.sublist(data.length - 2, data.length)),
       );
 
-      if (message.isValid) {
+      // check crc
+      var crcData = Uint8List.view(data.buffer, 0, data.length - 2);
+      final calculatedCrc = CRCUtil.crc16Calculate(crcData);
+      if (message.receivedCrc == calculatedCrc) {
         onMsg(message);
       } else {
         print('CRC校验失败，丢弃消息');
@@ -368,17 +376,4 @@ class ReceivedMessage {
     required this.encryptedData,
     required this.receivedCrc,
   });
-
-  bool get isValid {
-    if (dataLength > 0) {
-      final calculatedCrc = CRCUtil.crc16Calculate(encryptedData);
-      return calculatedCrc == receivedCrc;
-    }
-    return true;
-  }
-
-  // Uint8List get decryptedData {
-  //   final communicator = NostrUartCommunicator(''); // 需要实际的端口名
-  //   return communicator._aesDecrypt(encryptedData, id);
-  // }
 }
