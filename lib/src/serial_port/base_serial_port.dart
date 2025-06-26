@@ -49,7 +49,6 @@ class BaseSerialPort extends SerialPort {
       } catch (e) {}
     }
     sp.close();
-    sp.dispose();
     clearBuffer();
     return true;
   }
