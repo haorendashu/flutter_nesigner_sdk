@@ -91,11 +91,11 @@ class EspService {
     return completer.future.timeout(EspService.TIMEOUT);
   }
 
-  Future<int?> updateKey(Uint8List aesKey, String key) async {
+  Future<int?> updateKey(String pinCode, String key) async {
     var msgIdByte = randomMessageId();
     var completer = Completer<int?>();
 
-    final sourceData = key + HexUtil.bytesToHex(aesKey);
+    final sourceData = key + genMd5(pinCode);
     // print(sourceData);
 
     var signerTempPubkey = await getTempPubkey();

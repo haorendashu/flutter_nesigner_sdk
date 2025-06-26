@@ -77,8 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
     //     Uint8List.fromList(HEX.decode(iv_hex)));
     // printLog(String.fromCharCodes(source));
 
-    var updateResult = await espService.updateKey(aesKey, testPrivateKey);
-    printLog("updateResult $updateResult");
+    // var updateResult = await espService.updateKey(pin, testPrivateKey);
+    // printLog("updateResult $updateResult");
 
     // var result = await espService.removeKey(aesKey);
     // printLog("result $result");
@@ -87,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
         await espService.echo(aesKey, "Hello, this is a message from nesigner");
     printLog("echo result $result");
 
-    var espSigner = EspSigner(aesKey, espService);
+    var espSigner = EspSigner(pin, espService);
     var pubkey = await espSigner.getPublicKey();
     printLog("pubkey $pubkey");
 

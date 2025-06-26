@@ -15,8 +15,8 @@ class EspSigner {
 
   String? _pubkey;
 
-  EspSigner(Uint8List key, this.espService, {String? pubkey}) {
-    _aesKey = key;
+  EspSigner(String pinCode, this.espService, {String? pubkey}) {
+    _aesKey = HexUtil.hexToBytes(genMd5(pinCode));
     _pubkey = pubkey;
   }
 
