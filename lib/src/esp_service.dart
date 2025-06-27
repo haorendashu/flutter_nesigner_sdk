@@ -175,6 +175,10 @@ class EspService {
 
   Future<void> start() async {
     await _openAndCheck();
+
+    transport.listen((data) {
+      _parseSingleFrame(data);
+    });
   }
 
   void stop() {
@@ -261,13 +265,6 @@ class EspService {
     // print(output);
 
     return await transport.write(output);
-  }
-
-  // 开始监听消息
-  void startListening() {
-    transport.listen((data) {
-      _parseSingleFrame(data);
-    });
   }
 
   // 单帧解析方法

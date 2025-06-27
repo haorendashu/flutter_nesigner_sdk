@@ -62,7 +62,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     await espService.start();
     // await Future.delayed(const Duration(seconds: 10));
-    espService.startListening();
 
     String pin = "12345678";
     final aesKey = Uint8List.fromList(genMd5ForBytes(pin));
