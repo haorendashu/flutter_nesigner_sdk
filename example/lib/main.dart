@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -38,12 +39,15 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-
   Future<void> test() async {
     logText = "";
 
-    // var nesignerPorts = await AndroidSerialPort.getNesignerPorts();
-    var nesignerPorts = BaseSerialPort.getNesignerPorts();
+    late List<SerialPort> nesignerPorts;
+    if (Platform.isAndroid) {
+      nesignerPorts = await AndroidSerialPort.getNesignerPorts();
+    } else {
+      nesignerPorts = BaseSerialPort.getNesignerPorts();
+    }
 
     if (nesignerPorts.isEmpty) {
       printLog("No nesigner ports found");
