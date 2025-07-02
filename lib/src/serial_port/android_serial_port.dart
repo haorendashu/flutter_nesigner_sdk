@@ -49,6 +49,7 @@ class AndroidSerialPort extends SerialPort {
     if (_usbPort != null) {
       await _usbPort!.close();
       _usbPort = null;
+      print("Base serial port close");
     }
     return true;
   }

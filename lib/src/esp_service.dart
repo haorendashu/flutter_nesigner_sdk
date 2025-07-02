@@ -9,6 +9,7 @@ import 'package:flutter_nesigner_sdk/src/nostr_util/keys.dart';
 import 'package:flutter_nesigner_sdk/src/nostr_util/nip44_v2.dart';
 // import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:pointycastle/export.dart';
+import 'package:synchronized/synchronized.dart';
 
 import '../flutter_nesigner_sdk.dart';
 import 'utils/crc_util.dart';
@@ -36,6 +37,8 @@ class EspService {
   EspService(this.transport);
 
   Map<String, EspCallback> _callbacks = {};
+
+  final _lock = Lock(reentrant: true);
 
   void onMsg(ReceivedMessage reMsg) {
     var msgId = HexUtil.bytesToHex(reMsg.id);
@@ -175,10 +178,6 @@ class EspService {
 
   Future<void> start() async {
     await _openAndCheck();
-
-    transport.listen((data) {
-      _parseSingleFrame(data);
-    });
   }
 
   void stop() {
@@ -197,6 +196,22 @@ class EspService {
     _timer = Timer.periodic(const Duration(seconds: 30), (timer) async {
       try {
         await _doOpen();
+
+        if (transport.isOpen) {
+          try {
+            // print("nesigenr begin ping");
+            var pingFuture = ping();
+            await pingFuture.timeout(const Duration(seconds: 10));
+            // print("nesigner ping complete");
+          } catch (e) {
+            print("ping fail! try to close nesigner");
+            try {
+              await transport.close();
+            } catch (e) {
+              print(e);
+            }
+          }
+        }
       } catch (e) {
         print(e);
       }
@@ -205,7 +220,13 @@ class EspService {
 
   Future<void> _doOpen() async {
     if (!transport.isOpen) {
-      await transport.open();
+      var openResult = await transport.open();
+      print("Nesigner transport openResult $openResult");
+      if (openResult) {
+        transport.listen((data) {
+          _parseSingleFrame(data);
+        });
+      }
     }
   }
 
@@ -264,7 +285,9 @@ class EspService {
     // print("send fullLength ${output.length}");
     // print(output);
 
-    return await transport.write(output);
+    // return _lock.synchronized<int>(() async {
+      return await transport.write(output);
+    // });
   }
 
   // 单帧解析方法

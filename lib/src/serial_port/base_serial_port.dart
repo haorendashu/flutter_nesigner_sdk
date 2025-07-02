@@ -50,6 +50,7 @@ class BaseSerialPort extends SerialPort {
     }
     sp.close();
     clearBuffer();
+    print("Base serial port close");
     return true;
   }
 

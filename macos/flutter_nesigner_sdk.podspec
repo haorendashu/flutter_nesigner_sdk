@@ -24,7 +24,7 @@ A new Flutter plugin project.
 
   s.dependency 'FlutterMacOS'
 
-  s.vendored_libraries = 'libusb-1.0.dylib'
+  # s.vendored_libraries = 'libusb-1.0.dylib'
   # s.vendored_libraries = 'libusb-1.0_arm64.dylib'
 
   s.platform = :osx, '10.13'
