@@ -67,11 +67,11 @@ abstract class SerialPort extends BufferTransport {
 
       // 循环写入直到当前分片完全写入
       while (chunkWritten < chunkSize) {
-        print("chunkWritten $chunkWritten chunkSize $chunkSize");
+        // print("chunkWritten $chunkWritten chunkSize $chunkSize");
         // 写入分片并等待完成
         final written = await directWrite(
             Uint8List.sublistView(chunk, chunkWritten, chunkSize));
-        print("written $written");
+        // print("written $written");
         if (written < 0) {
           return written;
         }
@@ -83,7 +83,7 @@ abstract class SerialPort extends BufferTransport {
       }
     }
 
-    print("Total bytes written: $totalWritten");
+    // print("Total bytes written: $totalWritten");
     return totalWritten;
   }
 }

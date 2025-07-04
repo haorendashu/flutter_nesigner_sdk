@@ -30,7 +30,6 @@ dependencies:
   bip340: ^0.3.0
   string_validator: ^1.1.0
   usb_serial: ^0.5.2
-  synchronized: ^3.3.0+3
   # libusb: 0.4.23-dev.1+1
   # libusb:
   #   path: ../libusb_ffi/

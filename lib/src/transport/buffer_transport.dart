@@ -19,8 +19,8 @@ abstract class BufferTransport extends Transport {
           // 检查最小包头长度
           if (_receiveBuffer.length < Transport.PREFIX_LENGTH) return;
 
-          print("receive data");
-          print(_receiveBuffer);
+          // print("receive data");
+          // print(_receiveBuffer);
 
           // 解析长度头（最后4字节的包头）
           final headerBytes = _receiveBuffer.sublist(

@@ -286,7 +286,7 @@ class EspService {
     // print(output);
 
     // return _lock.synchronized<int>(() async {
-      return await transport.write(output);
+    return await transport.write(output);
     // });
   }
 
