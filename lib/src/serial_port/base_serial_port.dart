@@ -103,7 +103,8 @@ class BaseSerialPort extends SerialPort {
   @override
   Future<int> directWrite(Uint8List bytes) async {
     var wrote = sp.write(bytes);
-    sp.flush(ls.SerialPortBuffer.output);
+    // This line will cause macos not work, so we comment it out.
+    // sp.flush(ls.SerialPortBuffer.output);
     return wrote;
   }
 }
