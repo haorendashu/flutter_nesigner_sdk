@@ -33,6 +33,7 @@ dependencies:
   # libusb: 0.4.23-dev.1+1
   # libusb:
   #   path: ../libusb_ffi/
+  synchronized: 3.3.0+3
 
 dev_dependencies:
   flutter_test:

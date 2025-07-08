@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_nesigner_sdk/flutter_nesigner_sdk.dart';
 import 'package:flutter_nesigner_sdk/src/consts/msg_result.dart';
 import 'package:hex/hex.dart';
+import 'package:synchronized/synchronized.dart';
 
 import 'utils/hex_util.dart';
 
@@ -14,6 +15,8 @@ class EspSigner {
   late Uint8List _aesKey;
 
   String? _pubkey;
+
+  final _lock = Lock(reentrant: true);
 
   EspSigner(String pinCode, this.espService, {String? pubkey}) {
     _aesKey = HexUtil.hexToBytes(genMd5(pinCode));
@@ -93,26 +96,28 @@ class EspSigner {
     event["id"] = eventId;
     event["pubkey"] = _pubkey!;
 
-    espService.sendMessage(
-        callback: (reMsg) {
-          if (reMsg.result == MsgResult.OK) {
-            var decryptedData =
-                espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
-            var sig = HEX.encode(decryptedData);
-            event["sig"] = sig;
+    return _lock.synchronized(() async {
+      espService.sendMessage(
+          callback: (reMsg) {
+            if (reMsg.result == MsgResult.OK) {
+              var decryptedData =
+                  espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
+              var sig = HEX.encode(decryptedData);
+              event["sig"] = sig;
 
-            completer.complete(event);
-          } else {
-            completer.complete(null);
-          }
-        },
-        aesKey: _aesKey,
-        messageType: MsgType.NOSTR_SIGN_EVENT,
-        messageId: msgIdByte,
-        pubkey: _pubkey!,
-        data: Uint8List.fromList(HEX.decode(eventId)));
+              completer.complete(event);
+            } else {
+              completer.complete(null);
+            }
+          },
+          aesKey: _aesKey,
+          messageType: MsgType.NOSTR_SIGN_EVENT,
+          messageId: msgIdByte,
+          pubkey: _pubkey!,
+          data: Uint8List.fromList(HEX.decode(eventId!)));
 
-    return completer.future.timeout(EspService.TIMEOUT);
+      return completer.future.timeout(EspService.TIMEOUT);
+    });
   }
 
   Future<String?> encrypt(String pubkey, String plaintext) async {
@@ -140,27 +145,29 @@ class EspSigner {
     var msgIdByte = EspService.randomMessageId();
     var completer = Completer<String?>();
 
-    espService.sendMessage(
-        callback: (reMsg) {
-          if (reMsg.result == MsgResult.OK) {
-            var decryptedData =
-                espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
-            var result = utf8.decode(decryptedData);
-            completer.complete(result);
-          } else {
-            completer.complete(null);
-          }
-        },
-        aesKey: _aesKey,
-        messageType: msgType,
-        messageId: msgIdByte,
-        pubkey: _pubkey!,
-        data: Uint8List.fromList([
-          ...HEX.decode(pubkey),
-          ...utf8.encode(targetText),
-        ]));
+    return _lock.synchronized(() async {
+      espService.sendMessage(
+          callback: (reMsg) {
+            if (reMsg.result == MsgResult.OK) {
+              var decryptedData =
+                  espService.aesDecrypt(_aesKey, reMsg.encryptedData, reMsg.iv);
+              var result = utf8.decode(decryptedData);
+              completer.complete(result);
+            } else {
+              completer.complete(null);
+            }
+          },
+          aesKey: _aesKey,
+          messageType: msgType,
+          messageId: msgIdByte,
+          pubkey: _pubkey!,
+          data: Uint8List.fromList([
+            ...HEX.decode(pubkey),
+            ...utf8.encode(targetText),
+          ]));
 
-    return completer.future.timeout(EspService.TIMEOUT);
+      return completer.future.timeout(EspService.TIMEOUT);
+    });
   }
 
   Future<bool> _checkPubkey() async {

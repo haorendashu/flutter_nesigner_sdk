@@ -16,6 +16,7 @@ export 'src/utils/crc_util.dart';
 export 'src/utils/crypto_util.dart';
 export 'src/esp_service.dart';
 export 'src/esp_signer.dart';
+export 'src/serial_port/isolate/isolate_serial_port.dart';
 
 class FlutterNesignerSdk {
   Future<String?> getPlatformVersion() {

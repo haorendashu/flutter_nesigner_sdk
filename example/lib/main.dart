@@ -46,7 +46,8 @@ class _MyHomePageState extends State<MyHomePage> {
     if (Platform.isAndroid) {
       nesignerPorts = await AndroidSerialPort.getNesignerPorts();
     } else {
-      nesignerPorts = BaseSerialPort.getNesignerPorts();
+      // nesignerPorts = BaseSerialPort.getNesignerPorts();
+      nesignerPorts = IsolateSerialPort.getNesignerPorts();
     }
 
     if (nesignerPorts.isEmpty) {

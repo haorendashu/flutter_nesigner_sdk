@@ -9,7 +9,6 @@ import 'package:flutter_nesigner_sdk/src/nostr_util/keys.dart';
 import 'package:flutter_nesigner_sdk/src/nostr_util/nip44_v2.dart';
 // import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:pointycastle/export.dart';
-// import 'package:synchronized/synchronized.dart';
 
 import '../flutter_nesigner_sdk.dart';
 import 'utils/crc_util.dart';
@@ -37,8 +36,6 @@ class EspService {
   EspService(this.transport);
 
   Map<String, EspCallback> _callbacks = {};
-
-  // final _lock = Lock(reentrant: true);
 
   void onMsg(ReceivedMessage reMsg) {
     var msgId = HexUtil.bytesToHex(reMsg.id);
