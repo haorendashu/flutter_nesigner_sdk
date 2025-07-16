@@ -28,17 +28,19 @@ class BaseSerialPort extends SerialPort {
 
   BaseSerialPort(String name) {
     sp = ls.SerialPort(name);
-    sp.config = ls.SerialPortConfig()
-      ..baudRate = 115200
-      ..bits = 8
-      ..stopBits = 1
-      ..parity = ls.SerialPortParity.none;
   }
 
   @override
   Future<bool> open() async {
     clearBuffer();
-    return sp.open(mode: ls.SerialPortMode.readWrite);
+    var openResult = sp.open(mode: ls.SerialPortMode.readWrite);
+    sp.config = ls.SerialPortConfig()
+      ..baudRate = 115200
+      ..bits = 8
+      ..stopBits = 1
+      ..parity = ls.SerialPortParity.none
+      ..setFlowControl(ls.SerialPortFlowControl.none);
+    return openResult;
   }
 
   @override

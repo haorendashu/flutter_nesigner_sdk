@@ -19,11 +19,6 @@ class IsolateSerialPortWorker extends SerialPort {
   static void newAndRunWorker(IsolateSerialPortWorkerConfig config) {
     var worker = IsolateSerialPortWorker(config);
     worker.sp = ls.SerialPort(config.serialPortName);
-    worker.sp.config = ls.SerialPortConfig()
-      ..baudRate = 115200
-      ..bits = 8
-      ..stopBits = 1
-      ..parity = ls.SerialPortParity.none;
     worker.run();
   }
 
@@ -107,7 +102,16 @@ class IsolateSerialPortWorker extends SerialPort {
   @override
   Future<bool> open() async {
     clearBuffer();
-    return sp.open(mode: ls.SerialPortMode.readWrite);
+    var openResult = sp.open(mode: ls.SerialPortMode.readWrite);
+    if (openResult) {
+      sp.config = ls.SerialPortConfig()
+        ..baudRate = 115200
+        ..bits = 8
+        ..stopBits = 1
+        ..parity = ls.SerialPortParity.none
+        ..setFlowControl(ls.SerialPortFlowControl.none);
+    }
+    return openResult;
   }
 
   @override
