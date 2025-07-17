@@ -117,7 +117,7 @@ class EspSigner {
           data: Uint8List.fromList(HEX.decode(eventId!)));
 
       return completer.future.timeout(EspService.TIMEOUT);
-    });
+    }, timeout: EspService.TIMEOUT);
   }
 
   Future<String?> encrypt(String pubkey, String plaintext) async {
@@ -167,7 +167,7 @@ class EspSigner {
           ]));
 
       return completer.future.timeout(EspService.TIMEOUT);
-    });
+    }, timeout: EspService.TIMEOUT);
   }
 
   Future<bool> _checkPubkey() async {
