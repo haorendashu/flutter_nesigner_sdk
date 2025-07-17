@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
@@ -17,9 +18,14 @@ class IsolateSerialPort extends SerialPort {
     List<IsolateSerialPort> nesignerPorts = [];
     var ports = ls.SerialPort.availablePorts;
     for (var port in ports) {
-      IsolateSerialPort nesignerPort = IsolateSerialPort(port);
-      if (nesignerPort.productId == 0x3434 && nesignerPort.vendorId == 0x2323) {
-        nesignerPorts.add(nesignerPort);
+      try {
+        IsolateSerialPort nesignerPort = IsolateSerialPort(port);
+        if (nesignerPort.productId == 0x3434 && nesignerPort.vendorId == 0x2323) {
+          nesignerPorts.add(nesignerPort);
+        }
+      } catch (e) {
+        print("Error checking port $port: $e");
+        continue; // Skip this port if there's an error
       }
     }
 
