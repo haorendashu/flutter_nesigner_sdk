@@ -18,14 +18,14 @@ dependencies:
       url: https://github.com/haorendashu/flutter_libserialport
   crypto: ^3.0.6
   kepler: ^1.0.3
-  pointycastle: ^3.6.0
+  pointycastle: ^3.9.1
   hex: ^0.2.0
   cryptography: ^2.7.0
   # cryptography_flutter: ^2.3.2
   cryptography_flutter:
     git:
-        url: https://github.com/mvarendorff/cryptography
-        ref: fix/compatibility-agp-8x
+        url: https://github.com/haorendashu/cryptography
+        ref: remove_registrar
         path: cryptography_flutter
   bip340: ^0.3.0
   string_validator: ^1.1.0
